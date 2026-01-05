@@ -10,6 +10,8 @@ import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     
+    // MARK: - Hot Key
+    
     private var statusItem: NSStatusItem!
     private let popover = NSPopover()
     private var settingsWindow: NSWindow?
@@ -28,11 +30,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Popover for main view
         popover.contentViewController = NSHostingController(rootView: SymbolBrowserView())
+        
+        // Register global hot key (⌥⌘T) to toggle the tray popover
+        HotKeyManager.shared.onHotKey = { [weak self] in
+            self?.togglePopover()
+        }
+        HotKeyManager.shared.registerDefault()
     }
     
     @objc private func handleClick() {
         guard let event = NSApp.currentEvent else { return }
-        
         if event.type == .rightMouseUp {
             showRightClickMenu()
         } else {
@@ -40,12 +47,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     
+    private func showPopoverFromStatusItem() {
+        guard let button = statusItem.button else { return }
+        if !NSApp.isActive {
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        if popover.isShown {
+            popover.performClose(nil)
+        }
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+    }
+    
     private func togglePopover() {
         guard let button = statusItem.button else { return }
-        
         if popover.isShown {
             popover.performClose(nil)
         } else {
+            if !NSApp.isActive {
+                NSApp.activate(ignoringOtherApps: true)
+            }
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         }
     }
@@ -137,3 +157,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.removeObserver(self)
     }
 }
+

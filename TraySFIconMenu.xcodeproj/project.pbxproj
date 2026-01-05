@@ -8,11 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		15DF8F052F0BCFD300E2F184 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 15DF8F042F0BCFD300E2F184 /* LaunchAtLogin */; };
+		15DF8F0A2F0BD5FF00E2F184 /* HotKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15DF8F092F0BD5FF00E2F184 /* HotKeyManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		15D620AE2F0A2BE90047F64D /* TraySFIconMenu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TraySFIconMenu.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		15DF8EF42F0BCF1300E2F184 /* TraySFIconMenuHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TraySFIconMenuHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		15DF8F092F0BD5FF00E2F184 /* HotKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -66,6 +68,7 @@
 				15D620B02F0A2BE90047F64D /* TraySFIconMenu */,
 				15DF8EF52F0BCF1300E2F184 /* TraySFIconMenuHelper */,
 				15D620AF2F0A2BE90047F64D /* Products */,
+				15DF8F092F0BD5FF00E2F184 /* HotKeyManager.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -189,6 +192,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				15DF8F0A2F0BD5FF00E2F184 /* HotKeyManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
