@@ -7,14 +7,14 @@
 
 
 import SwiftUI
-import AppKit
 
 @main
 struct TraySFIconMenuApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
     var body: some Scene {
-        MenuBarExtra("SF Symbols", systemImage: "bolt.fill") {
-            SymbolBrowserView()
+        Settings {
+            SettingsView()
         }
-        .menuBarExtraStyle(.window)
     }
 }
