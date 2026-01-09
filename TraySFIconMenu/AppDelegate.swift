@@ -10,7 +10,7 @@ import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
-    // MARK: - Hot Key
+    
 
     private var statusItem: NSStatusItem!
     private let popover: NSPopover = {
@@ -22,7 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
 
-        // Create tray icon
+        
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem.button {
@@ -32,10 +32,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
 
-        // Popover for main view
+        
         popover.contentViewController = NSHostingController(rootView: SymbolBrowserView())
 
-        // Register global hot key (⌥⌘T) to toggle the tray popover
+        
         HotKeyManager.shared.onHotKey = { [weak self] in
             self?.togglePopover()
         }
@@ -84,26 +84,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q"))
 
         statusItem.menu = menu
-        statusItem.button?.performClick(nil)  // show menu
-        statusItem.menu = nil  // remove menu immediately after showing
+        statusItem.button?.performClick(nil)  
+        statusItem.menu = nil  
     }
 
     @objc private func openSettings() {
-        // Check if window already exists and is visible
+        
         if let existingWindow = settingsWindow {
             if existingWindow.isVisible {
                 existingWindow.makeKeyAndOrderFront(nil)
                 NSApp.activate(ignoringOtherApps: true)
                 return
             } else {
-                // Window exists but is not visible (was closed), so clean it up
+                
                 NotificationCenter.default.removeObserver(
                     self, name: NSWindow.willCloseNotification, object: existingWindow)
                 settingsWindow = nil
             }
         }
 
-        // Define the window size
+        
         let windowSize = NSSize(width: 380, height: 220)
         let screenRect = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 800, height: 600)
         let windowRect = NSRect(
@@ -113,7 +113,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             height: windowSize.height
         )
 
-        // Create window with frame
+        
         let window = NSWindow(
             contentRect: windowRect,
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
@@ -121,13 +121,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             defer: false
         )
 
-        // Set SwiftUI view
+        
         window.contentViewController = NSHostingController(rootView: SettingsView())
         window.title = "Settings"
         window.setFrameAutosaveName("SettingsWindow")
-        window.isReleasedWhenClosed = false  // Important: prevent premature deallocation
+        window.isReleasedWhenClosed = false  
 
-        // Observe window closing
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(settingsWindowWillClose(_:)),
@@ -141,10 +141,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func settingsWindowWillClose(_ notification: Notification) {
-        // Clear the reference when window closes
+        
         settingsWindow = nil
 
-        // Remove the observer
+        
         if let window = notification.object as? NSWindow {
             NotificationCenter.default.removeObserver(
                 self, name: NSWindow.willCloseNotification, object: window)
@@ -160,7 +160,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     deinit {
-        // Clean up observers
+        
         NotificationCenter.default.removeObserver(self)
     }
 }

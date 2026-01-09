@@ -45,8 +45,6 @@ struct KeyDownView: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSView, context: Context) {
         if let focused = focused, let view = nsView as? FocusableView {
-            // Update the view's knowledge of its focus state binding if we wanted 2-way sync,
-            // but primarily we check if we should become first responder.
             if focused.wrappedValue {
                 DispatchQueue.main.async {
                     if let window = view.window, window.firstResponder != view {
@@ -62,10 +60,6 @@ class FocusableView: NSView {
     var action: ((NSEvent) -> Void)?
 
     override var acceptsFirstResponder: Bool { true }
-
-    // We don't auto-focus on move to window anymore unless commanded,
-    // or if we want default behavior we can keep it but usually precise control is better.
-    // Let's remove auto-focus on appear to rely on the binding or click.
 
     override func keyDown(with event: NSEvent) {
         action?(event)

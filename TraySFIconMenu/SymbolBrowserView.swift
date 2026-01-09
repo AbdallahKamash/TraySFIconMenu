@@ -1,3 +1,10 @@
+//
+//  SymbolBrowserView.swift
+//  TraySFIconMenu
+//
+//  Created by Abdallah Kamash on 5/1/2026.
+//
+
 import SwiftUI
 
 struct SymbolBrowserView: View {
@@ -70,7 +77,7 @@ struct SymbolBrowserView: View {
     var body: some View {
         ZStack {
             HStack(spacing: 0) {
-                // Sidebar
+                
                 List(categories, selection: $selectedCategory) { cat in
                     HStack(spacing: 8) {
                         Image(systemName: cat.icon)
@@ -90,9 +97,9 @@ struct SymbolBrowserView: View {
 
                 Divider()
 
-                // Main Content
+                
                 VStack(spacing: 0) {
-                    // Sticky Header with Search Field
+                    
                     TextField("Search SF Symbols", text: $query)
                         .textFieldStyle(.roundedBorder)
                         .padding([.horizontal, .top], 12)
@@ -102,7 +109,7 @@ struct SymbolBrowserView: View {
                             selectedSymbolIndex = nil
                         }
                         .onSubmit {
-                            // Enter in text field -> Focus first item
+                            
                             if let count = filtered.count as Int?, count > 0 {
                                 searchFieldFocused = false
                                 isGridFocused = true
@@ -127,7 +134,6 @@ struct SymbolBrowserView: View {
                             }
                             .padding(12)
                         }
-                        .background(Color(NSColor.windowBackgroundColor))
                         .onKeyDown(focused: $isGridFocused) { event in
                             handleGridKeyboard(event, scrollProxy: proxy)
                         }
@@ -171,22 +177,22 @@ struct SymbolBrowserView: View {
                 self.searchFieldFocused = true
             }
 
-            // Monitor local events for TextField Arrow Handling and Sidebar Tab
+            
             self.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 if searchFieldFocused {
-                    if event.keyCode == 125 || event.keyCode == 48 {  // Arrow Down or Tab
+                    if event.keyCode == 125 || event.keyCode == 48 {  
                         if !filtered.isEmpty {
                             searchFieldFocused = false
                             isGridFocused = true
                             selectedSymbolIndex = 0
-                            return nil  // Consume event
+                            return nil  
                         }
                     }
                 } else if isSidebarFocused {
-                    if event.keyCode == 48 {  // Tab
+                    if event.keyCode == 48 {  
                         isSidebarFocused = false
                         searchFieldFocused = true
-                        return nil  // Consume event
+                        return nil  
                     }
                 }
                 return event
@@ -218,7 +224,7 @@ struct SymbolBrowserView: View {
     private func handleGridKeyboard(_ event: NSEvent, scrollProxy: ScrollViewProxy) {
         let count = filtered.count
 
-        // Handle Alphanumeric -> Focus TextField
+        
         if let chars = event.charactersIgnoringModifiers, !chars.isEmpty,
             chars.rangeOfCharacter(from: .alphanumerics) != nil,
             !event.modifierFlags.contains(.command)
@@ -231,8 +237,8 @@ struct SymbolBrowserView: View {
             return
         }
 
-        // Handle Tab -> Sidebar
-        if event.keyCode == 48 {  // Tab
+        
+        if event.keyCode == 48 {  
             selectedSymbolIndex = nil
             isGridFocused = false
             isSidebarFocused = true
@@ -243,7 +249,7 @@ struct SymbolBrowserView: View {
 
         var nextIndex = selectedSymbolIndex ?? 0
 
-        // Handle Command+C
+        
         if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "c" {
             if nextIndex < count {
                 copySymbol(filtered[nextIndex])
@@ -252,29 +258,29 @@ struct SymbolBrowserView: View {
         }
 
         switch event.keyCode {
-        case 123:  // Left
+        case 123:  
             nextIndex = (nextIndex <= 0) ? count - 1 : nextIndex - 1
-        case 124:  // Right
+        case 124:  
             nextIndex = (nextIndex >= count - 1) ? 0 : nextIndex + 1
-        case 125:  // Down
+        case 125:  
             let target = nextIndex + columnsCount
             if target < count {
                 nextIndex = target
             } else {
                 nextIndex = nextIndex % columnsCount
             }
-        case 126:  // Up
+        case 126:  
             let target = nextIndex - columnsCount
             if target >= 0 {
                 nextIndex = target
             } else {
-                // Return to Text Field
+                
                 searchFieldFocused = true
                 isGridFocused = false
                 selectedSymbolIndex = nil
                 return
             }
-        case 36, 49:  // Enter, Space
+        case 36, 49:  
             if nextIndex < count {
                 copySymbol(filtered[nextIndex])
             }
