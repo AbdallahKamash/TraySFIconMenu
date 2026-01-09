@@ -25,6 +25,7 @@ struct SymbolBrowserView: View {
     @State private var showCopyToast = false
     @State private var copiedSymbolName = ""
     @State private var eventMonitor: Any?
+    @State private var scrollToTopID = UUID()
 
     private let columnsCount = 4
     private let columnWidth: CGFloat = 80
@@ -77,7 +78,7 @@ struct SymbolBrowserView: View {
     var body: some View {
         ZStack {
             HStack(spacing: 0) {
-                
+
                 List(categories, selection: $selectedCategory) { cat in
                     HStack(spacing: 8) {
                         Image(systemName: cat.icon)
@@ -97,9 +98,8 @@ struct SymbolBrowserView: View {
 
                 Divider()
 
-                
                 VStack(spacing: 0) {
-                    
+
                     TextField("Search SF Symbols", text: $query)
                         .textFieldStyle(.roundedBorder)
                         .padding([.horizontal, .top], 12)
@@ -109,7 +109,7 @@ struct SymbolBrowserView: View {
                             selectedSymbolIndex = nil
                         }
                         .onSubmit {
-                            
+
                             if let count = filtered.count as Int?, count > 0 {
                                 searchFieldFocused = false
                                 isGridFocused = true
@@ -133,6 +133,13 @@ struct SymbolBrowserView: View {
                                 }
                             }
                             .padding(12)
+                        }
+                        .onChange(of: scrollToTopID) { _,_ in
+                            if !filtered.isEmpty {
+                                withAnimation {
+                                    proxy.scrollTo(0, anchor: .top)
+                                }
+                            }
                         }
                         .onKeyDown(focused: $isGridFocused) { event in
                             handleGridKeyboard(event, scrollProxy: proxy)
@@ -163,6 +170,10 @@ struct SymbolBrowserView: View {
             }
         }
         .onAppear {
+            self.query = ""
+            self.scrollToTopID = UUID()
+            self.isGridFocused = false
+
             let data = loadSymbolData()
             self.symbols = data.allSymbols
             self.categories = data.categories
@@ -177,22 +188,21 @@ struct SymbolBrowserView: View {
                 self.searchFieldFocused = true
             }
 
-            
             self.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 if searchFieldFocused {
-                    if event.keyCode == 125 || event.keyCode == 48 {  
+                    if event.keyCode == 125 || event.keyCode == 48 {
                         if !filtered.isEmpty {
                             searchFieldFocused = false
                             isGridFocused = true
                             selectedSymbolIndex = 0
-                            return nil  
+                            return nil
                         }
                     }
                 } else if isSidebarFocused {
-                    if event.keyCode == 48 {  
+                    if event.keyCode == 48 {
                         isSidebarFocused = false
                         searchFieldFocused = true
-                        return nil  
+                        return nil
                     }
                 }
                 return event
@@ -224,7 +234,6 @@ struct SymbolBrowserView: View {
     private func handleGridKeyboard(_ event: NSEvent, scrollProxy: ScrollViewProxy) {
         let count = filtered.count
 
-        
         if let chars = event.charactersIgnoringModifiers, !chars.isEmpty,
             chars.rangeOfCharacter(from: .alphanumerics) != nil,
             !event.modifierFlags.contains(.command)
@@ -237,8 +246,7 @@ struct SymbolBrowserView: View {
             return
         }
 
-        
-        if event.keyCode == 48 {  
+        if event.keyCode == 48 {
             selectedSymbolIndex = nil
             isGridFocused = false
             isSidebarFocused = true
@@ -249,7 +257,6 @@ struct SymbolBrowserView: View {
 
         var nextIndex = selectedSymbolIndex ?? 0
 
-        
         if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "c" {
             if nextIndex < count {
                 copySymbol(filtered[nextIndex])
@@ -258,29 +265,29 @@ struct SymbolBrowserView: View {
         }
 
         switch event.keyCode {
-        case 123:  
+        case 123:
             nextIndex = (nextIndex <= 0) ? count - 1 : nextIndex - 1
-        case 124:  
+        case 124:
             nextIndex = (nextIndex >= count - 1) ? 0 : nextIndex + 1
-        case 125:  
+        case 125:
             let target = nextIndex + columnsCount
             if target < count {
                 nextIndex = target
             } else {
                 nextIndex = nextIndex % columnsCount
             }
-        case 126:  
+        case 126:
             let target = nextIndex - columnsCount
             if target >= 0 {
                 nextIndex = target
             } else {
-                
+
                 searchFieldFocused = true
                 isGridFocused = false
                 selectedSymbolIndex = nil
                 return
             }
-        case 36, 49:  
+        case 36, 49:
             if nextIndex < count {
                 copySymbol(filtered[nextIndex])
             }
