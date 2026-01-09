@@ -9,9 +9,15 @@ import Cocoa
 import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+<<<<<<< HEAD
 
     // MARK: - Hot Key
 
+=======
+    
+    // MARK: - Hot Key
+    
+>>>>>>> 16f71fbb117296093f101a199d08fdd4fa25cf3c
     private var statusItem: NSStatusItem!
     private let popover: NSPopover = {
         let p = NSPopover()
@@ -34,7 +40,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Popover for main view
         popover.contentViewController = NSHostingController(rootView: SymbolBrowserView())
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 16f71fbb117296093f101a199d08fdd4fa25cf3c
         // Register global hot key (⌥⌘T) to toggle the tray popover
         HotKeyManager.shared.onHotKey = { [weak self] in
             self?.togglePopover()
@@ -50,7 +60,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             togglePopover()
         }
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 16f71fbb117296093f101a199d08fdd4fa25cf3c
     private func showPopoverFromStatusItem() {
         guard let button = statusItem.button else { return }
         if !NSApp.isActive {
@@ -61,7 +75,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
     }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 16f71fbb117296093f101a199d08fdd4fa25cf3c
     private func togglePopover() {
         guard let button = statusItem.button else { return }
         if popover.isShown {
@@ -164,3 +182,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.removeObserver(self)
     }
 }
+
