@@ -5,7 +5,7 @@ want an icon for your iOS/iPadOS/macOS project.
 
 . Built with SwiftUI for macOS only.
 
-![TraySFIconMenu Screenshot](screenshot-placeholder.png)
+![TraySFIconMenu Screenshot](https://repository-images.githubusercontent.com/1128224065/ff9e5187-b6a8-4b62-8e81-e96a8b6e00ee)
 
 ## Features
 
