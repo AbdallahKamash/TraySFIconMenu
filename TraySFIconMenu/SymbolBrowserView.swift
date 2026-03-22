@@ -27,6 +27,8 @@ struct SymbolBrowserView: View {
     @State private var eventMonitor: Any?
     @State private var scrollToTopID = UUID()
 
+    @State private var resignActiveObserver: NSObjectProtocol? = nil
+
     private let columnsCount = 4
     private let columnWidth: CGFloat = 80
     private let columnSpacing: CGFloat = 16
@@ -174,6 +176,11 @@ struct SymbolBrowserView: View {
             self.scrollToTopID = UUID()
             self.isGridFocused = false
 
+            // Observe when app resigns active to dismiss window automatically
+            resignActiveObserver = NotificationCenter.default.addObserver(forName: NSApplication.willResignActiveNotification, object: nil, queue: .main) { _ in
+                closeKeyWindow()
+            }
+
             let data = loadSymbolData()
             self.symbols = data.allSymbols
             self.categories = data.categories
@@ -213,6 +220,10 @@ struct SymbolBrowserView: View {
                 NSEvent.removeMonitor(monitor)
                 eventMonitor = nil
             }
+            if let obs = resignActiveObserver {
+                NotificationCenter.default.removeObserver(obs)
+                resignActiveObserver = nil
+            }
         }
     }
 
@@ -228,6 +239,12 @@ struct SymbolBrowserView: View {
             if copiedSymbolName == name {
                 withAnimation { showCopyToast = false }
             }
+        }
+    }
+
+    private func closeKeyWindow() {
+        if let window = NSApp.keyWindow {
+            window.close()
         }
     }
 
@@ -300,3 +317,4 @@ struct SymbolBrowserView: View {
         scrollProxy.scrollTo(nextIndex, anchor: .center)
     }
 }
+

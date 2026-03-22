@@ -10,7 +10,8 @@ import SwiftUI
 import LaunchAtLogin
 
 struct SettingsView: View {
-    @StateObject private var launchAtLogin = LaunchAtLogin.observable
+    
+    @State private var isEnabled = LaunchAtLogin.isEnabled
     
     @AppStorage("showSymbolNames") private var showSymbolNames = true
     @AppStorage("defaultIconSize") private var defaultIconSize: Double = 28
@@ -18,7 +19,10 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("General") {
-                Toggle("Launch at login", isOn: $launchAtLogin.isEnabled)
+                Toggle("Launch at login", isOn: $isEnabled)
+                    .onChange(of: isEnabled) { newValue, _ in
+                        LaunchAtLogin.isEnabled = newValue
+                    }
             }
         }
         .padding(20)

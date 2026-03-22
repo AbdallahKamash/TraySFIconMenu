@@ -26,7 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "bolt.fill", accessibilityDescription: nil)
+            button.image = NSImage(systemSymbolName: "signpost.right.fill", accessibilityDescription: nil)
             button.target = self
             button.action = #selector(handleClick)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -158,7 +158,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func quitApp() {
         NSApp.terminate(nil)
     }
-
+   
     deinit {
         
         NotificationCenter.default.removeObserver(self)

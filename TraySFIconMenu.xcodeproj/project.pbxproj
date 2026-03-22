@@ -7,14 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		15DF8F052F0BCFD300E2F184 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 15DF8F042F0BCFD300E2F184 /* LaunchAtLogin */; };
 		15DF8F0A2F0BD5FF00E2F184 /* HotKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15DF8F092F0BD5FF00E2F184 /* HotKeyManager.swift */; };
+		15E8E55F2F700A3B00C73499 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 15E8E55E2F700A3B00C73499 /* LaunchAtLogin */; };
+		15E8E5622F70181900C73499 /* TrayIconAppLogo.icon in Resources */ = {isa = PBXBuildFile; fileRef = 15E8E5612F70181900C73499 /* TrayIconAppLogo.icon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		15D620AE2F0A2BE90047F64D /* TraySFIconMenu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TraySFIconMenu.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		15DF8EF42F0BCF1300E2F184 /* TraySFIconMenuHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TraySFIconMenuHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		15DF8F092F0BD5FF00E2F184 /* HotKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyManager.swift; sourceTree = "<group>"; };
+		15E8E5612F70181900C73499 /* TrayIconAppLogo.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = TrayIconAppLogo.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -24,6 +26,13 @@
 				Info.plist,
 			);
 			target = 15D620AD2F0A2BE90047F64D /* TraySFIconMenu */;
+		};
+		15E8E5602F700AA800C73499 /* Exceptions for "TraySFIconMenuHelper" folder in "TraySFIconMenuHelper" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 15DF8EF32F0BCF1300E2F184 /* TraySFIconMenuHelper */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -38,6 +47,9 @@
 		};
 		15DF8EF52F0BCF1300E2F184 /* TraySFIconMenuHelper */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				15E8E5602F700AA800C73499 /* Exceptions for "TraySFIconMenuHelper" folder in "TraySFIconMenuHelper" target */,
+			);
 			path = TraySFIconMenuHelper;
 			sourceTree = "<group>";
 		};
@@ -48,7 +60,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15DF8F052F0BCFD300E2F184 /* LaunchAtLogin in Frameworks */,
+				15E8E55F2F700A3B00C73499 /* LaunchAtLogin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -69,6 +81,8 @@
 				15DF8EF52F0BCF1300E2F184 /* TraySFIconMenuHelper */,
 				15D620AF2F0A2BE90047F64D /* Products */,
 				15DF8F092F0BD5FF00E2F184 /* HotKeyManager.swift */,
+				15E8E55A2F70099D00C73499 /* Frameworks */,
+				15E8E5612F70181900C73499 /* TrayIconAppLogo.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -79,6 +93,13 @@
 				15DF8EF42F0BCF1300E2F184 /* TraySFIconMenuHelper.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		15E8E55A2F70099D00C73499 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -101,7 +122,7 @@
 			);
 			name = TraySFIconMenu;
 			packageProductDependencies = (
-				15DF8F042F0BCFD300E2F184 /* LaunchAtLogin */,
+				15E8E55E2F700A3B00C73499 /* LaunchAtLogin */,
 			);
 			productName = TraySFIconMenu;
 			productReference = 15D620AE2F0A2BE90047F64D /* TraySFIconMenu.app */;
@@ -137,7 +158,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2620;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					15D620AD2F0A2BE90047F64D = {
 						CreatedOnToolsVersion = 26.2;
@@ -157,7 +178,7 @@
 			mainGroup = 15D620A52F0A2BE90047F64D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				15DF8F032F0BCFD300E2F184 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */,
+				15E8E55D2F700A3B00C73499 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 15D620AF2F0A2BE90047F64D /* Products */;
@@ -175,6 +196,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				15E8E5622F70181900C73499 /* TrayIconAppLogo.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,6 +262,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = J9VVK84L9D;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -265,6 +288,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -304,6 +328,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J9VVK84L9D;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -322,6 +347,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -329,12 +355,14 @@
 		15D620BA2F0A2BEA0047F64D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = TrayIconAppLogo;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = TraySFIconMenu/TraySFIconMenu.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9VVK84L9D;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -364,12 +392,14 @@
 		15D620BB2F0A2BEA0047F64D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = TrayIconAppLogo;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = TraySFIconMenu/TraySFIconMenu.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9VVK84L9D;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -404,6 +434,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9VVK84L9D;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -438,6 +469,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9VVK84L9D;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -497,9 +529,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		15DF8F032F0BCFD300E2F184 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */ = {
+		15E8E55D2F700A3B00C73499 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin";
+			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin-Modern";
 			requirement = {
 				branch = main;
 				kind = branch;
@@ -508,9 +540,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		15DF8F042F0BCFD300E2F184 /* LaunchAtLogin */ = {
+		15E8E55E2F700A3B00C73499 /* LaunchAtLogin */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 15DF8F032F0BCFD300E2F184 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */;
+			package = 15E8E55D2F700A3B00C73499 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */;
 			productName = LaunchAtLogin;
 		};
 /* End XCSwiftPackageProductDependency section */
