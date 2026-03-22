@@ -7,6 +7,7 @@
 
 import Cocoa
 import SwiftUI
+import LaunchAtLogin
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
@@ -21,7 +22,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-
+        
+        let hasRunBeforeKey = "hasRunBefore"
+        if !UserDefaults.standard.bool(forKey: hasRunBeforeKey) {
+            UserDefaults.standard.set(true, forKey: hasRunBeforeKey)
+            
+            let alert = NSAlert()
+            alert.messageText = "Launch on Login?"
+            alert.informativeText = "Would you like TraySFIconMenu to start automatically when you log in? You can change this later in Settings."
+            alert.addButton(withTitle: "Yes")
+            alert.addButton(withTitle: "No")
+            
+            NSApp.activate(ignoringOtherApps: true)
+            if alert.runModal() == .alertFirstButtonReturn {
+                LaunchAtLogin.isEnabled = true
+            } else {
+                LaunchAtLogin.isEnabled = false
+            }
+        }
         
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
