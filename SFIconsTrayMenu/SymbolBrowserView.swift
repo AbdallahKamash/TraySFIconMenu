@@ -132,6 +132,14 @@ struct SymbolBrowserView: View {
                                         selectedSymbolIndex = index
                                     }
                                     .id(index)
+                                    .contextMenu {
+                                        Button("Copy Icon") {
+                                            copyIcon(name)
+                                        }
+                                        Button("Share as text") {
+                                            copySymbol(name)
+                                        }
+                                    }
                                 }
                             }
                             .padding(12)
@@ -223,6 +231,23 @@ struct SymbolBrowserView: View {
             if let obs = resignActiveObserver {
                 NotificationCenter.default.removeObserver(obs)
                 resignActiveObserver = nil
+            }
+        }
+    }
+
+    private func copyIcon(_ name: String) {
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        if let image = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
+            pb.writeObjects([image])
+        }
+
+        copiedSymbolName = name
+        withAnimation { showCopyToast = true }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            if copiedSymbolName == name {
+                withAnimation { showCopyToast = false }
             }
         }
     }

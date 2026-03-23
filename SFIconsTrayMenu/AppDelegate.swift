@@ -20,11 +20,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return p
     }()
     private var settingsWindow: NSWindow?
+    private var guideWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         
         let hasRunBeforeKey = "hasRunBefore"
-        if !UserDefaults.standard.bool(forKey: hasRunBeforeKey) {
+        if UserDefaults.standard.bool(forKey: hasRunBeforeKey) {
             UserDefaults.standard.set(true, forKey: hasRunBeforeKey)
             
             let alert = NSAlert()
@@ -39,7 +40,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             } else {
                 LaunchAtLogin.isEnabled = false
             }
+            
+            DispatchQueue.main.async {
+                self.openGuide()
+            }
         }
+
         
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
@@ -97,6 +103,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(
             NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ","))
+        menu.addItem(NSMenuItem(title: "Guide", action: #selector(openGuide), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "About", action: #selector(openAbout), keyEquivalent: ""))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q"))
@@ -163,6 +170,60 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow = nil
 
         
+        if let window = notification.object as? NSWindow {
+            NotificationCenter.default.removeObserver(
+                self, name: NSWindow.willCloseNotification, object: window)
+        }
+    }
+
+    @objc private func openGuide() {
+        if let existingWindow = guideWindow {
+            if existingWindow.isVisible {
+                existingWindow.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+                return
+            } else {
+                NotificationCenter.default.removeObserver(
+                    self, name: NSWindow.willCloseNotification, object: existingWindow)
+                guideWindow = nil
+            }
+        }
+
+        let windowSize = NSSize(width: 380, height: 260)
+        let screenRect = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 800, height: 600)
+        let windowRect = NSRect(
+            x: screenRect.midX - windowSize.width / 2,
+            y: screenRect.midY - windowSize.height / 2,
+            width: windowSize.width,
+            height: windowSize.height
+        )
+
+        let window = NSWindow(
+            contentRect: windowRect,
+            styleMask: [.titled, .closable, .miniaturizable],
+            backing: .buffered,
+            defer: false
+        )
+
+        window.contentViewController = NSHostingController(rootView: GuideView())
+        window.title = "Guide"
+        window.setFrameAutosaveName("GuideWindow")
+        window.isReleasedWhenClosed = false
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(guideWindowWillClose(_:)),
+            name: NSWindow.willCloseNotification,
+            object: window
+        )
+
+        guideWindow = window
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func guideWindowWillClose(_ notification: Notification) {
+        guideWindow = nil
         if let window = notification.object as? NSWindow {
             NotificationCenter.default.removeObserver(
                 self, name: NSWindow.willCloseNotification, object: window)
