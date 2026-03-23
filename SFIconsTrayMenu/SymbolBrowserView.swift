@@ -136,9 +136,9 @@ struct SymbolBrowserView: View {
                                         Button("Copy Icon") {
                                             copyIcon(name)
                                         }
-                                        Button("Share as text") {
-                                            copySymbol(name)
-                                        }
+//                                        Button("Share as text") {
+//                                            copySymbol(name)
+//                                        }
                                     }
                                 }
                             }

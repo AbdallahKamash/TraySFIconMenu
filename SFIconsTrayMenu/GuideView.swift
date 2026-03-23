@@ -15,18 +15,24 @@ struct GuideView: View {
                     Image(systemName: "keyboard")
                         .frame(width: 24)
                     Text("Show & Hide Menu:\nPress Shift + Cmd + T")
+                        .bold()
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 
                 HStack(alignment: .top) {
                     Image(systemName: "doc.on.doc")
                         .frame(width: 24)
                     Text("Copy Icons:\nRight-click, Space, or Enter on an icon")
+                        .bold()
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 
                 HStack(alignment: .top) {
                     Image(systemName: "arrow.right.to.line")
                         .frame(width: 24)
                     Text("Navigate menu items:\nUse Tab to move focus.")
+                        .bold()
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .font(.body)

@@ -25,7 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         
         let hasRunBeforeKey = "hasRunBefore"
-        if UserDefaults.standard.bool(forKey: hasRunBeforeKey) {
+        if !UserDefaults.standard.bool(forKey: hasRunBeforeKey) {
             UserDefaults.standard.set(true, forKey: hasRunBeforeKey)
             
             let alert = NSAlert()
