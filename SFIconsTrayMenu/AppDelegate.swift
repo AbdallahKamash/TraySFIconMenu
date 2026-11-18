@@ -21,6 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }()
     private var settingsWindow: NSWindow?
     private var guideWindow: NSWindow?
+    private var aboutWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         
@@ -106,7 +107,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         
         if let existingWindow = settingsWindow {
             if existingWindow.isVisible {
-                existingWindow.makeKeyAndOrderFront(nil)
+                existingWindow.showCentered()
                 NSApp.activate(ignoringOtherApps: true)
                 return
             } else {
@@ -138,7 +139,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         
         window.contentViewController = NSHostingController(rootView: SettingsView())
         window.title = "Settings"
-        window.setFrameAutosaveName("SettingsWindow")
         window.isReleasedWhenClosed = false  
 
         
@@ -150,7 +150,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         settingsWindow = window
-        window.makeKeyAndOrderFront(nil)
+        window.showCentered()
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -168,7 +168,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func openGuide() {
         if let existingWindow = guideWindow {
             if existingWindow.isVisible {
-                existingWindow.makeKeyAndOrderFront(nil)
+                existingWindow.showCentered()
                 NSApp.activate(ignoringOtherApps: true)
                 return
             } else {
@@ -199,7 +199,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.titleVisibility = .hidden
         window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
-        window.center()
 
         NotificationCenter.default.addObserver(
             self,
@@ -209,7 +208,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
 
         guideWindow = window
-        window.makeKeyAndOrderFront(nil)
+        window.showCentered()
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -222,7 +221,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openAbout() {
-        NSApp.orderFrontStandardAboutPanel(nil)
+        if let window = aboutWindow {
+            window.showCentered()
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 560),
+            styleMask: [.titled, .closable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentViewController = NSHostingController(rootView: AboutView())
+        window.title = "About \(AppInfo.name)"
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.isMovableByWindowBackground = true
+        window.isReleasedWhenClosed = false
+
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: window, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.aboutWindow = nil }
+        }
+
+        aboutWindow = window
+        window.showCentered()
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc private func quitApp() {
@@ -232,5 +258,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     deinit {
         
         NotificationCenter.default.removeObserver(self)
+    }
+}
+
+extension NSWindow {
+    /// Centers the window exactly in the middle of the screen the mouse is on
+    /// (AppKit's `center()` sits it in the upper third), then brings it forward.
+    func showCentered() {
+        layoutIfNeeded()  // let SwiftUI content settle the final size first
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) }
+            ?? NSScreen.main ?? self.screen
+        if let visible = screen?.visibleFrame {
+            let size = frame.size
+            setFrameOrigin(NSPoint(
+                x: (visible.midX - size.width / 2).rounded(),
+                y: (visible.midY - size.height / 2).rounded()))
+        }
+        makeKeyAndOrderFront(nil)
     }
 }
