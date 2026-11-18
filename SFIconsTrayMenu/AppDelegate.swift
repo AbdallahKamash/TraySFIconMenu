@@ -24,29 +24,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         
-        let hasRunBeforeKey = "hasRunBefore"
-        if !UserDefaults.standard.bool(forKey: hasRunBeforeKey) {
-            UserDefaults.standard.set(true, forKey: hasRunBeforeKey)
-            
-            let alert = NSAlert()
-            alert.messageText = "Launch on Login?"
-            alert.informativeText = "Would you like TraySFIconMenu to start automatically when you log in? You can change this later in Settings."
-            alert.addButton(withTitle: "Yes")
-            alert.addButton(withTitle: "No")
-            
-            NSApp.activate(ignoringOtherApps: true)
-            if alert.runModal() == .alertFirstButtonReturn {
-                LaunchAtLogin.isEnabled = true
-            } else {
-                LaunchAtLogin.isEnabled = false
-            }
-            
-            DispatchQueue.main.async {
-                self.openGuide()
-            }
-        }
-
-        
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem.button {
@@ -64,6 +41,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.togglePopover()
         }
         HotKeyManager.shared.registerDefault()
+
+        // First launch: show the welcome tour. Later launches: a quick "I'm in the
+        // menu bar" overlay. Give the status item a moment to be laid out first.
+        let hasRunBeforeKey = "hasRunBefore"
+        if !UserDefaults.standard.bool(forKey: hasRunBeforeKey) {
+            UserDefaults.standard.set(true, forKey: hasRunBeforeKey)
+            DispatchQueue.main.async { self.openGuide() }
+        } else if UserDefaults.standard.object(forKey: "showLaunchAnimation") as? Bool ?? true {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                LaunchOverlay.show(for: self.statusItem)
+            }
+        }
     }
 
     @objc private func handleClick() {
@@ -189,26 +178,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        let windowSize = NSSize(width: 380, height: 260)
-        let screenRect = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 800, height: 600)
-        let windowRect = NSRect(
-            x: screenRect.midX - windowSize.width / 2,
-            y: screenRect.midY - windowSize.height / 2,
-            width: windowSize.width,
-            height: windowSize.height
-        )
-
         let window = NSWindow(
-            contentRect: windowRect,
-            styleMask: [.titled, .closable, .miniaturizable],
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 420),
+            styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
 
-        window.contentViewController = NSHostingController(rootView: GuideView())
-        window.title = "Guide"
-        window.setFrameAutosaveName("GuideWindow")
+        window.contentViewController = NSHostingController(
+            rootView: OnboardingView { [weak self] in
+                guard let self else { return }
+                self.guideWindow?.close()
+                // End the tour by pointing at where the app lives.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    LaunchOverlay.show(for: self.statusItem)
+                }
+            })
+        window.title = "Welcome"
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.isMovableByWindowBackground = true
         window.isReleasedWhenClosed = false
+        window.center()
 
         NotificationCenter.default.addObserver(
             self,
