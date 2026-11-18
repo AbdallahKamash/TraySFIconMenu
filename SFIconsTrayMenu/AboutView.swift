@@ -86,7 +86,7 @@ struct AboutView: View {
                     ?? "Browse the full SF Symbols catalog by category")
             Highlight(icon: "magnifyingglass", text: "Search by name, keyword, or words like “one circle”")
             Highlight(icon: "doc.on.doc", text: "Copy names or icon images, including variants")
-            Highlight(icon: "keyboard", text: "Open from anywhere with ⇧⌘T")
+            Highlight(icon: "keyboard", text: "Open from anywhere with \(HotKeyManager.shared.current.displayString)")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

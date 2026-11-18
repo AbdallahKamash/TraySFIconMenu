@@ -126,7 +126,7 @@ private struct LaunchOverlayView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text("TraySFIconMenu is running")
                     .font(.system(size: 12, weight: .semibold))
-                Text("Click the icon or press ⇧⌘T")
+                Text("Click the icon or press \(HotKeyManager.shared.current.displayString)")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }

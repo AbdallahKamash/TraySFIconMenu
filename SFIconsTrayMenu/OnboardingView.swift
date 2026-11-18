@@ -15,6 +15,7 @@ struct OnboardingView: View {
     @State private var page = 0
     @State private var forward = true
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
+    @State private var shortcut = ShortcutStore.shared
 
     private let pageCount = 4
 
@@ -74,12 +75,12 @@ struct OnboardingView: View {
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 6) {
-                KeyCap("⇧")
-                KeyCap("⌘")
-                KeyCap("T")
+                ForEach(Array(shortcut.current.keyCaps.enumerated()), id: \.offset) { _, cap in
+                    KeyCap(cap)
+                }
             }
 
-            Text("from any app. Right-click the icon for Settings and Quit.")
+            Text("from any app. Right-click the icon for Settings (change the shortcut there) and Quit.")
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
             Spacer()

@@ -9,7 +9,7 @@
 
 import Foundation
 
-enum SymbolSynonyms {
+nonisolated enum SymbolSynonyms {
 
     /// Returns lowercased search terms for a symbol name such as "0.circle" or "plus.square".
     static func terms(for name: String) -> [String] {
@@ -176,7 +176,7 @@ enum SymbolSynonyms {
 
 // MARK: - Search
 
-enum SymbolSearch {
+nonisolated enum SymbolSearch {
 
     /// Splits a query on spaces, dots and word-hyphens, then turns number words into digits.
     /// "one.circle" → ["1", "circle"], "Twenty-One Square" → ["21", "square"].

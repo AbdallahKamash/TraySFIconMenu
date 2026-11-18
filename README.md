@@ -9,7 +9,7 @@ want an icon for your iOS/iPadOS/macOS project.
 
 ## Features
 
-- **Menu Bar Integration** - Lives in your menu bar for quick access (keyboard shortcut `Shift`+`⌘T`)
+- **Menu Bar Integration** - Lives in your menu bar for quick access (keyboard shortcut `Shift`+`⌘T`, customizable in Settings)
 - **Powerful Search** - Search by symbol name, keywords, or aliases (0 = zero, 123 = numbers, a = character, etc...)
 - **Categorized Browsing** - Browse symbols by categories including "What's New"
 - **Full Keyboard Navigation** - Navigate entirely without a mouse
@@ -19,6 +19,7 @@ want an icon for your iOS/iPadOS/macOS project.
 
 | Key | Action |
 |-----|--------|
+| `⇧⌘T` | Show/hide the symbol browser from any app (change it in Settings → Keyboard Shortcut) |
 | `Tab` | Move focus between search, sidebar, and grid |
 | `↑/↓/←/→` | Navigate symbols in grid view |
 | `Enter` or `Space` | Copy selected symbol |

@@ -41,7 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         HotKeyManager.shared.onHotKey = { [weak self] in
             self?.togglePopover()
         }
-        HotKeyManager.shared.registerDefault()
+        HotKeyManager.shared.registerSaved()
 
         // First launch: show the welcome tour. Later launches: a quick "I'm in the
         // menu bar" overlay. Give the status item a moment to be laid out first.
@@ -119,7 +119,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         
-        let windowSize = NSSize(width: 380, height: 220)
+        let windowSize = NSSize(width: 440, height: 300)
         let screenRect = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 800, height: 600)
         let windowRect = NSRect(
             x: screenRect.midX - windowSize.width / 2,

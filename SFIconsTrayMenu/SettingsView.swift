@@ -26,8 +26,17 @@ struct SettingsView: View {
                     }
                 Toggle("Show menu bar animation on launch", isOn: $showLaunchAnimation)
             }
+
+            Section("Keyboard Shortcut") {
+                LabeledContent("Open TraySFIconMenu") {
+                    ShortcutRecorder()
+                }
+            }
         }
+        // Plain (columns) style: a .grouped Form is a scroll view with no natural height,
+        // which made the hosting window collapse to zero height.
         .padding(20)
-        .frame(width: 380)
+        // Size the window to exactly what the content needs, so nothing gets truncated.
+        .fixedSize()
     }
 }
