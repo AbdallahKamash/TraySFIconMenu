@@ -60,9 +60,12 @@ The app runs as a menu bar application with a small memory footprint, making it 
 ## Data Source
 
 The symbol data is loaded from Apple's SF Symbols app bundle, including:
-- Symbol names and categories
-- Layer set information (which SF Symbols version introduced each symbol)
-- Search keywords and aliases for better discoverability
+- Symbol names and the release that introduced each one (`name_availability.plist`), used to hide symbols your macOS version can't render
+- Categories, including Apple's own "What's New" list (`categories.plist`, `symbol_categories.plist`)
+- Search keywords plus current and legacy (renamed) names (`symbol_search.plist`, `name_aliases.strings`, `legacy_aliases.strings`)
+- Symbol variant families such as `.fill`, `.slash` and localized versions (`base_symbols_map.json`)
+
+To refresh the data, copy the files from `/Applications/SF Symbols.app/Contents/Resources/Metadata/` into `SFIconsTrayMenu/`.
 
 ## Acknowledgments
 

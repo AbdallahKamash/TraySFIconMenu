@@ -20,6 +20,14 @@
 	</dict>
 	<dict>
 		<key>icon</key>
+		<string>scribble</string>
+		<key>key</key>
+		<string>draw</string>
+		<key>label</key>
+		<string>Draw</string>
+	</dict>
+	<dict>
+		<key>icon</key>
 		<string>slider.horizontal.below.square.and.square.filled</string>
 		<key>key</key>
 		<string>variable</string>
@@ -244,7 +252,7 @@
 	</dict>
 	<dict>
 		<key>icon</key>
-		<string>x.squareroot</string>
+		<string>radicand.squareroot</string>
 		<key>key</key>
 		<string>math</string>
 		<key>label</key>

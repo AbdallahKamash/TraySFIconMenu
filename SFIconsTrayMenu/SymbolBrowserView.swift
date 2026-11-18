@@ -9,13 +9,10 @@ import SwiftUI
 
 struct SymbolBrowserView: View {
     @State private var query = ""
-    @State private var symbols: [String] = []
+    @State private var symbolData: SymbolData? = nil
     @State private var categories: [SymbolCategory] = []
     @State private var selectedCategory = "all"
-    @State private var symbolCategoryMap: [String: [String]] = [:]
-    @State private var layerSetMap: [String: (year: Int, sub: Int)] = [:]
-    @State private var searchKeywords: [String: [String]] = [:]
-    @State private var nameAliases: [String: [String]] = [:]
+    @State private var filtered: [String] = []
 
     @FocusState private var searchFieldFocused: Bool
     @FocusState private var isSidebarFocused: Bool
@@ -37,44 +34,43 @@ struct SymbolBrowserView: View {
         Array(repeating: GridItem(.fixed(columnWidth), spacing: columnSpacing), count: columnsCount)
     }
 
-    private var filtered: [String] {
-        var list = symbols
+    private func refilter() {
+        guard let data = symbolData else { filtered = []; return }
+        var list = data.allSymbols
 
-        if selectedCategory != "all" {
-            if selectedCategory == "whatsnew" {
-                let sortedReleases = layerSetMap.values
-                    .sorted { a, b in
-                        if a.year == b.year { return a.sub > b.sub }
-                        return a.year > b.year
-                    }
-                let topReleases = Array(sortedReleases.prefix(2))
-                list = list.filter { symbol in
-                    if let release = layerSetMap[symbol] {
-                        return topReleases.contains(where: { $0 == release })
-                    }
-                    return false
+        switch selectedCategory {
+        case "all": break
+        case "whatsnew": list = list.filter { data.whatsNew.contains($0) }
+        default: list = list.filter { data.symbolCategoryMap[$0]?.contains(selectedCategory) ?? false }
+        }
+
+        let tokens = query.lowercased().split(whereSeparator: { $0 == " " }).map(String.init)
+        if !tokens.isEmpty {
+            // Every token must match the name or a keyword/alias. Name matches rank first.
+            var nameHits: [String] = []
+            var termHits: [String] = []
+            for name in list {
+                let terms = data.searchTerms[name] ?? []
+                var allInName = true
+                var allMatch = true
+                for token in tokens {
+                    if name.contains(token) { continue }
+                    allInName = false
+                    if !terms.contains(where: { $0.contains(token) }) { allMatch = false; break }
                 }
-            } else {
-                list = list.filter { symbolCategoryMap[$0]?.contains(selectedCategory) ?? false }
+                if allInName { nameHits.append(name) } else if allMatch { termHits.append(name) }
             }
+            let joined = tokens.joined(separator: ".")
+            nameHits.sort { a, b in
+                let ap = a.hasPrefix(joined), bp = b.hasPrefix(joined)
+                if ap != bp { return ap }
+                if ap && a.count != b.count { return a.count < b.count }
+                return a < b
+            }
+            list = nameHits + termHits
         }
 
-        if !query.isEmpty {
-            list = list.filter { name in
-                let nameMatch = name.localizedCaseInsensitiveContains(query)
-                let keywordMatch =
-                    searchKeywords[name]?.contains(where: {
-                        $0.localizedCaseInsensitiveContains(query)
-                    }) ?? false
-                let aliasMatch =
-                    nameAliases[name]?.contains(where: {
-                        $0.localizedCaseInsensitiveContains(query)
-                    }) ?? false
-                return nameMatch || keywordMatch || aliasMatch
-            }
-        }
-
-        return list
+        filtered = list
     }
 
     var body: some View {
@@ -96,6 +92,8 @@ struct SymbolBrowserView: View {
                 .focused($isSidebarFocused)
                 .onChange(of: selectedCategory) { _, _ in
                     selectedSymbolIndex = nil
+                    refilter()
+                    scrollToTopID = UUID()
                 }
 
                 Divider()
@@ -109,6 +107,7 @@ struct SymbolBrowserView: View {
                         .focused($searchFieldFocused)
                         .onChange(of: query) { _, _ in
                             selectedSymbolIndex = nil
+                            refilter()
                         }
                         .onSubmit {
 
@@ -133,16 +132,18 @@ struct SymbolBrowserView: View {
                                     }
                                     .id(index)
                                     .contextMenu {
-                                        Button("Copy Icon") {
-                                            copyIcon(name)
-                                        }
-//                                        Button("Share as text") {
-//                                            copySymbol(name)
-//                                        }
+                                        symbolContextMenu(name)
                                     }
                                 }
                             }
                             .padding(12)
+                        }
+                        .overlay {
+                            if filtered.isEmpty && symbolData != nil {
+                                Text("No symbols match “\(query)”")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                         .onChange(of: scrollToTopID) { _,_ in
                             if !filtered.isEmpty {
@@ -155,6 +156,21 @@ struct SymbolBrowserView: View {
                             handleGridKeyboard(event, scrollProxy: proxy)
                         }
                     }
+
+                    Divider()
+                    HStack {
+                        Text("\(filtered.count) symbols")
+                        Spacer()
+                        if let index = selectedSymbolIndex, index < filtered.count,
+                            let since = symbolData?.availabilityDescription(for: filtered[index])
+                        {
+                            Text(since)
+                        }
+                    }
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
                 }
             }
 
@@ -190,12 +206,12 @@ struct SymbolBrowserView: View {
             }
 
             let data = loadSymbolData()
-            self.symbols = data.allSymbols
+            self.symbolData = data
             self.categories = data.categories
-            self.symbolCategoryMap = data.symbolCategoryMap
-            self.layerSetMap = data.layerSetMap
-            self.searchKeywords = data.searchKeywords
-            self.nameAliases = data.nameAliases
+            if !data.categories.contains(where: { $0.key == selectedCategory }) {
+                self.selectedCategory = "all"
+            }
+            refilter()
 
             self.selectedSymbolIndex = nil
 
@@ -232,6 +248,27 @@ struct SymbolBrowserView: View {
                 NotificationCenter.default.removeObserver(obs)
                 resignActiveObserver = nil
             }
+        }
+    }
+
+    @ViewBuilder
+    private func symbolContextMenu(_ name: String) -> some View {
+        Button("Copy Name") { copySymbol(name) }
+        Button("Copy Icon") { copyIcon(name) }
+        if let family = symbolData?.variants[name], family.count > 1 {
+            Menu("Variants") {
+                ForEach(family, id: \.self) { variant in
+                    Button {
+                        copySymbol(variant)
+                    } label: {
+                        Label(variant, systemImage: variant)
+                    }
+                }
+            }
+        }
+        if let since = symbolData?.availabilityDescription(for: name) {
+            Divider()
+            Text(since)
         }
     }
 
