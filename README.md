@@ -1,83 +1,110 @@
 # TraySFIconMenu
 
-A lightweight macOS menu bar app that lets you quickly browse, search, and copy SF Symbols to your clipboard without the need to open the SF Symbol everytime you
-want an icon for your iOS/iPadOS/macOS project.
+A lightweight macOS menu bar app that lets you quickly browse, search, and copy SF Symbols without opening the SF Symbols app every time you need an icon for your iOS, iPadOS, macOS, watchOS or visionOS project.
 
-. Built with SwiftUI for macOS only.
+Built with SwiftUI, for macOS only.
 
 ![TraySFIconMenu Screenshot](https://repository-images.githubusercontent.com/1128224065/ff9e5187-b6a8-4b62-8e81-e96a8b6e00ee)
 
+## Download
+
+Grab the latest build from the [Releases page](https://github.com/AbdallahKamash/TraySFIconMenu/releases/latest), unzip it, and move `SFIconsTrayMenu.app` to your Applications folder.
+
+> **Beta builds aren't notarized yet.** The first time you open the app, macOS will block it. Right-click the app and choose **Open**, or go to **System Settings → Privacy & Security** and click **Open Anyway**. You only need to do this once.
+
 ## Features
 
-- **Menu Bar Integration** - Lives in your menu bar for quick access (keyboard shortcut `Shift`+`⌘T`, customizable in Settings)
-- **Powerful Search** - Search by symbol name, keywords, or aliases (0 = zero, 123 = numbers, a = character, etc...)
-- **Categorized Browsing** - Browse symbols by categories including "What's New"
-- **Full Keyboard Navigation** - Navigate entirely without a mouse
-- **One-Click Copy** - Click any symbol to copy its name to clipboard with Toast notifications when symbols are copied
+- **Lives in your menu bar.** Open it from any app with `⇧⌘T`, or record your own shortcut in Settings (with a one-click reset to the default).
+- **The full, current catalog.** Over 8,000 symbols from the latest SF Symbols release, automatically limited to the ones your version of macOS can actually render.
+- **Search that understands you.** Search by name, Apple's keywords, or plain words:
+  - Numbers by value: `1`, `01`, `one`, `one circle` or `one.circle` all find `01.circle` and `1.circle`.
+  - Characters and currencies: `+`, `!`, `%`, `$`, `€`, `dollar`, `euro` …
+  - Old names: renamed symbols are found by their legacy names (e.g. `volume` → `speaker`).
+- **Browse by category**, using the same categories as Apple's SF Symbols app, including Apple's own **What's New** list.
+- **Copy what you need.** Copy the symbol name, or the icon itself as a high-resolution image.
+- **Variants at a glance.** Right-click a symbol for its whole family: `.fill`, `.slash`, badges, and localized versions (Arabic, Hindi, right-to-left …).
+- **Availability info.** See which macOS and SF Symbols version introduced each symbol.
+- **Keyboard first.** Navigate everything without touching the mouse.
+- **Welcome tour** on first launch, and a short menu bar animation on later launches so you know where the app went (can be turned off in Settings).
+- **Launch at login**, optional.
+- **VoiceOver support** for the menu bar icon and the symbol grid.
 
 ## Keyboard Shortcuts
 
 | Key | Action |
 |-----|--------|
 | `⇧⌘T` | Show/hide the symbol browser from any app (change it in Settings → Keyboard Shortcut) |
+| Any letter or number | Start typing to search |
 | `Tab` | Move focus between search, sidebar, and grid |
-| `↑/↓/←/→` | Navigate symbols in grid view |
-| `Enter` or `Space` | Copy selected symbol |
-| `⌘C` | Copy selected symbol |
-| Any alphanumeric key | Start typing to search (when in grid) |
-| `Tab` from grid | Return to search field |
+| `↑` `↓` `←` `→` | Move around the grid |
+| `Return` or `Space` | Copy the selected symbol's name |
+| `⌘C` | Copy the selected symbol's name |
+| Right-click a symbol | Copy Name, Copy Icon, Variants, availability |
+| Right-click the menu bar icon | Settings, Guide, About, Quit |
 
-## Installation
+## Requirements
 
-### Requirements
-- macOS 13.0+ (Ventura or later) - "built with macOS 26.3"
-- Xcode 15.0+ - "built with Xcode 26.2"
-- Swift 5.9+ - "built with Swift 6.2"
+- **To run:** macOS 26.0 or later
+- **To build:** Xcode 26.2 or later
 
-### Steps
+## Building from Source
+
 1. Clone the repository
-```bash
-git clone https://github.com/AbdallahKamash/TraySFIconMenu.git
-cd TraySFIconMenu
-```
+   ```bash
+   git clone https://github.com/AbdallahKamash/TraySFIconMenu.git
+   cd TraySFIconMenu
+   ```
+2. Open the project in Xcode
+   ```bash
+   open SFIconsTrayMenu.xcodeproj
+   ```
+3. Build and run with `⌘R`. To run the unit tests, press `⌘U`, or from the terminal:
+   ```bash
+   xcodebuild -project SFIconsTrayMenu.xcodeproj -scheme SFIconsTrayMenu test
+   ```
 
-2. Open in Xcode
-```bash
-open TraySFIconMenu.xcodeproj
-```
+The only dependency, [LaunchAtLogin-Modern](https://github.com/sindresorhus/LaunchAtLogin-Modern), is fetched automatically by Swift Package Manager.
 
-3. Build and run (⌘R)
+### Project Structure
 
-## How It Works
-
-TraySFIconMenu loads the complete SF Symbols catalog and organizes them into categories. The app includes:
-
-- **All Symbols** - Complete SF Symbols library (latest)
-- **Category Filters** - Organized by Apple's predefined categories to make the user more familiar with the already existing layout of the official SF Symbol App.
-- **Smart Search** - Includes symbol aliases and keywords for better discovery
-
-The app runs as a menu bar application with a small memory footprint, making it perfect for designers and developers who frequently need to reference or copy SF Symbol names.
+| Path | What's inside |
+|------|---------------|
+| `SFIconsTrayMenu/AppDelegate.swift` | Menu bar item, popover, windows, launch flow |
+| `SFIconsTrayMenu/SymbolBrowserView.swift` | The main symbol browser (sidebar, search, grid) |
+| `SFIconsTrayMenu/SymbolCategory.swift` | Loads and caches the bundled SF Symbols metadata |
+| `SFIconsTrayMenu/SymbolSynonyms.swift` | Search: synonyms, number words, ranking |
+| `SFIconsTrayMenu/HotKeyManager.swift` | Global shortcut registration and storage |
+| `SFIconsTrayMenu/ShortcutRecorder.swift` | The shortcut recorder in Settings |
+| `SFIconsTrayMenu/OnboardingView.swift` | First-launch welcome tour |
+| `SFIconsTrayMenu/LaunchOverlay.swift` | The menu bar launch animation |
+| `SFIconsTrayMenu/AboutView.swift` | The About window |
+| `SFIconsTrayMenuTests/` | Unit tests (Swift Testing) |
 
 ## Data Source
 
-The symbol data is loaded from Apple's SF Symbols app bundle, including:
+The symbol data comes from the metadata inside Apple's SF Symbols app, bundled with TraySFIconMenu:
+
 - Symbol names and the release that introduced each one (`name_availability.plist`), used to hide symbols your macOS version can't render
 - Categories, including Apple's own "What's New" list (`categories.plist`, `symbol_categories.plist`)
 - Search keywords plus current and legacy (renamed) names (`symbol_search.plist`, `name_aliases.strings`, `legacy_aliases.strings`)
 - Symbol variant families such as `.fill`, `.slash` and localized versions (`base_symbols_map.json`)
 
-To refresh the data, copy the files from `/Applications/SF Symbols.app/Contents/Resources/Metadata/` into `SFIconsTrayMenu/`.
+To update to a newer SF Symbols release, copy the files from `/Applications/SF Symbols.app/Contents/Resources/Metadata/` into `SFIconsTrayMenu/` and rebuild.
+
+## Privacy
+
+TraySFIconMenu works completely offline. It doesn't collect, store, or send any data. The only time it touches the internet is when you click a link in the About window.
 
 ## Acknowledgments
 
 - Apple for the incredible SF Symbols library
+- [Sindre Sorhus](https://github.com/sindresorhus) for LaunchAtLogin-Modern
 - The SwiftUI community for inspiration and best practices
 
 ## Support
 
-If you find this app useful, please consider:
-Starring the repository, sharing on Twitter (@arceus_kmsh), or contributing code or documentation
+If you find this app useful, please consider starring the repository, sharing it on Twitter (@arceus_kmsh), or contributing code or documentation. Found a bug or have an idea? [Open an issue](https://github.com/AbdallahKamash/TraySFIconMenu/issues).
 
 ---
 
-**Note:** This app requires SF Symbols, which is part of Xcode and macOS. Make sure you have the latest Xcode installed or macOS Ventura or later for the best experience.
+**Note:** SF Symbols are provided by Apple and are subject to Apple's license terms. TraySFIconMenu is an independent project and is not affiliated with Apple.
