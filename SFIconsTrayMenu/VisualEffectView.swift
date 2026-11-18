@@ -25,6 +25,21 @@ struct VisualEffectView: NSViewRepresentable {
     }
 }
 
+/// Reports the NSWindow a SwiftUI view lives in.
+struct WindowReader: NSViewRepresentable {
+    let onWindow: (NSWindow?) -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { onWindow(view.window) }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async { onWindow(nsView.window) }
+    }
+}
+
 extension View {
     func onKeyDown(focused: Binding<Bool>? = nil, perform action: @escaping (NSEvent) -> Void)
         -> some View

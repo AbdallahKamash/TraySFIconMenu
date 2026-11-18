@@ -23,8 +23,8 @@ struct SymbolBrowserView: View {
     @State private var copiedSymbolName = ""
     @State private var eventMonitor: Any?
     @State private var scrollToTopID = UUID()
-
-    @State private var resignActiveObserver: NSObjectProtocol? = nil
+    /// The popover's window, so the key monitor only reacts to keys typed here.
+    @State private var hostWindow: NSWindow?
 
     private let columnsCount = 4
     private let columnWidth: CGFloat = 80
@@ -44,7 +44,7 @@ struct SymbolBrowserView: View {
         default: list = list.filter { data.symbolCategoryMap[$0]?.contains(selectedCategory) ?? false }
         }
 
-        list = SymbolSearch.filter(list, query: query, terms: data.searchTerms)
+        list = SymbolSearch.filter(list, query: query, index: data.searchIndex)
 
         filtered = list
     }
@@ -87,7 +87,7 @@ struct SymbolBrowserView: View {
                         }
                         .onSubmit {
 
-                            if let count = filtered.count as Int?, count > 0 {
+                            if !filtered.isEmpty {
                                 searchFieldFocused = false
                                 isGridFocused = true
                                 selectedSymbolIndex = 0
@@ -150,6 +150,11 @@ struct SymbolBrowserView: View {
                 }
             }
 
+            WindowReader { window in
+                if hostWindow !== window { hostWindow = window }  // avoid update loops
+            }
+                .frame(width: 0, height: 0)
+
             if showCopyToast {
                 VStack {
                     Spacer()
@@ -176,10 +181,8 @@ struct SymbolBrowserView: View {
             self.scrollToTopID = UUID()
             self.isGridFocused = false
 
-            // Observe when app resigns active to dismiss window automatically
-            resignActiveObserver = NotificationCenter.default.addObserver(forName: NSApplication.willResignActiveNotification, object: nil, queue: .main) { _ in
-                closeKeyWindow()
-            }
+            // The popover is .transient, so it already closes itself when the app
+            // loses focus; no need to close windows by hand here.
 
             let data = loadSymbolData()
             self.symbolData = data
@@ -195,7 +198,11 @@ struct SymbolBrowserView: View {
                 self.searchFieldFocused = true
             }
 
+            // Install once; the guard stops duplicates if onAppear runs again.
+            guard eventMonitor == nil else { return }
             self.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                // Only handle keys typed in the browser popover, never in Settings etc.
+                guard let hostWindow, event.window === hostWindow else { return event }
                 if searchFieldFocused {
                     if event.keyCode == 125 || event.keyCode == 48 {
                         if !filtered.isEmpty {
@@ -219,10 +226,6 @@ struct SymbolBrowserView: View {
             if let monitor = eventMonitor {
                 NSEvent.removeMonitor(monitor)
                 eventMonitor = nil
-            }
-            if let obs = resignActiveObserver {
-                NotificationCenter.default.removeObserver(obs)
-                resignActiveObserver = nil
             }
         }
     }
@@ -251,7 +254,7 @@ struct SymbolBrowserView: View {
     private func copyIcon(_ name: String) {
         let pb = NSPasteboard.general
         pb.clearContents()
-        if let image = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
+        if let image = renderedSymbol(name) {
             pb.writeObjects([image])
         }
 
@@ -280,10 +283,31 @@ struct SymbolBrowserView: View {
         }
     }
 
-    private func closeKeyWindow() {
-        if let window = NSApp.keyWindow {
-            window.close()
-        }
+    /// The symbol drawn at 128pt (256px on Retina) in black, as a bitmap that pastes
+    /// at a usable size. The bare `NSImage(systemSymbolName:)` is only ~17×16pt.
+    private func renderedSymbol(_ name: String) -> NSImage? {
+        let config = NSImage.SymbolConfiguration(pointSize: 128, weight: .regular)
+            .applying(NSImage.SymbolConfiguration(paletteColors: [.black]))
+        guard let symbol = NSImage(systemSymbolName: name, accessibilityDescription: name)?
+            .withSymbolConfiguration(config)
+        else { return nil }
+
+        let size = symbol.size
+        let scale: CGFloat = 2
+        guard let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: Int(size.width * scale), pixelsHigh: Int(size.height * scale),
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)
+        else { return nil }
+        rep.size = size
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        symbol.draw(in: NSRect(origin: .zero, size: size))
+        NSGraphicsContext.restoreGraphicsState()
+
+        let image = NSImage(size: size)
+        image.addRepresentation(rep)
+        return image
     }
 
     private func handleGridKeyboard(_ event: NSEvent, scrollProxy: ScrollViewProxy) {

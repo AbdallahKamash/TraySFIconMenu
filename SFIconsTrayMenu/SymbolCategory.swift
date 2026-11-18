@@ -4,10 +4,13 @@
 //
 //  Created by Abdallah Kamash on 5/1/2026.
 //
+//  Loads the bundled SF Symbols metadata. Everything here is nonisolated so the
+//  catalog can be built on a background thread at launch (see `preloadSymbolData`).
+//
 
-import SwiftUI
+import AppKit
 
-struct SymbolCategory: Identifiable {
+nonisolated struct SymbolCategory: Identifiable, Sendable {
     var id: String { key }
     let icon: String
     let key: String
@@ -15,7 +18,7 @@ struct SymbolCategory: Identifiable {
 }
 
 /// A symbol's first SF Symbols release, e.g. "2024.3" → SF Symbols 6.3.
-struct SymbolRelease: Comparable, Hashable {
+nonisolated struct SymbolRelease: Comparable, Hashable, Sendable {
     let year: Int
     let sub: Int
 
@@ -36,7 +39,7 @@ struct SymbolRelease: Comparable, Hashable {
     }
 }
 
-struct SymbolData {
+nonisolated struct SymbolData: Sendable {
     /// Symbols available on this Mac, sorted, excluding localized variants (.ar, .hi, .rtl …).
     let allSymbols: [String]
     /// Categories that have at least one available symbol.
@@ -46,8 +49,8 @@ struct SymbolData {
     let releases: [String: SymbolRelease]
     /// SF Symbols release key → minimum macOS version string.
     let macOSVersions: [String: String]
-    /// Lowercased search terms per symbol (keywords + current/legacy aliases).
-    let searchTerms: [String: [String]]
+    /// Pre-computed search data per symbol (keywords, aliases, synonyms, name parts).
+    let searchIndex: SymbolSearch.Index
     /// Symbol → its whole family (base + fill/slash/badge/localized variants), available ones only.
     let variants: [String: [String]]
 
@@ -59,26 +62,55 @@ struct SymbolData {
     }
 }
 
-private let localeSuffixes: Set<String> = [
+// MARK: - Loading
+
+/// Thread-safe, load-once cache. The first caller builds the catalog (~150 ms);
+/// everyone else gets the cached copy, waiting if a build is already in progress.
+nonisolated private final class SymbolDataStore: @unchecked Sendable {
+    static let shared = SymbolDataStore()
+    private let lock = NSLock()
+    private var data: SymbolData?
+
+    func get() -> SymbolData {
+        lock.lock()
+        defer { lock.unlock() }
+        if let data { return data }
+        let built = buildSymbolData()
+        data = built
+        return built
+    }
+}
+
+/// Returns the symbol catalog, building it on first use.
+nonisolated func loadSymbolData() -> SymbolData {
+    SymbolDataStore.shared.get()
+}
+
+/// Builds the catalog in the background so opening the browser later is instant.
+nonisolated func preloadSymbolData() {
+    DispatchQueue.global(qos: .utility).async { _ = loadSymbolData() }
+}
+
+nonisolated private let localeSuffixes: Set<String> = [
     "ar", "hi", "rtl", "he", "zh", "th", "ja", "ko", "sat", "mni", "ml", "kn", "bn",
     "gu", "or", "mr", "te", "pa", "ta", "si", "el", "ru", "my", "km",
 ]
 
-private func loadPlist(_ name: String) -> Any? {
+nonisolated private func loadPlist(_ name: String) -> Any? {
     guard let url = Bundle.main.url(forResource: name, withExtension: "plist"),
         let data = try? Data(contentsOf: url)
     else { return nil }
     return try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)
 }
 
-private func loadStrings(_ name: String) -> [String: String] {
+nonisolated private func loadStrings(_ name: String) -> [String: String] {
     guard let url = Bundle.main.url(forResource: name, withExtension: "strings"),
         let dict = NSDictionary(contentsOf: url) as? [String: String]
     else { return [:] }
     return dict
 }
 
-private func isAvailable(macOS version: String?) -> Bool {
+nonisolated private func isAvailable(macOS version: String?) -> Bool {
     guard let version else { return true }
     let parts = version.split(separator: ".").map { Int($0) ?? 0 }
     let required = OperatingSystemVersion(
@@ -88,11 +120,7 @@ private func isAvailable(macOS version: String?) -> Bool {
     return ProcessInfo.processInfo.isOperatingSystemAtLeast(required)
 }
 
-private var cachedSymbolData: SymbolData?
-
-func loadSymbolData() -> SymbolData {
-    if let cached = cachedSymbolData { return cached }
-
+nonisolated private func buildSymbolData() -> SymbolData {
     // MARK: Availability — the full list of symbol names and when each appeared.
     var macOSVersions: [String: String] = [:]
     var releaseKeys: [String: String] = [:]
@@ -102,25 +130,18 @@ func loadSymbolData() -> SymbolData {
             for (year, platforms) in yearMap { macOSVersions[year] = platforms["macOS"] }
         }
     }
-    // Fall back to the older layerset file if name_availability is missing.
-    if releaseKeys.isEmpty,
-        let root = loadPlist("layerset_availability") as? [String: Any],
-        let symbols = root["symbols"] as? [String: [String: String]]
-    {
-        for (name, info) in symbols { releaseKeys[name] = info["hierarchical"] ?? "" }
-    }
 
     var available = Set<String>()
     var releases: [String: SymbolRelease] = [:]
     for (name, key) in releaseKeys {
-        let mac = key.isEmpty ? nil : macOSVersions[key]
-        // Unknown future releases (not in the map) are only shown if the OS can render them.
-        if mac == nil && !key.isEmpty && !macOSVersions.isEmpty {
+        let mac = macOSVersions[key]
+        // Releases newer than this metadata knows about: only show what the OS can render.
+        if mac == nil {
             guard NSImage(systemSymbolName: name, accessibilityDescription: nil) != nil else { continue }
         }
         guard isAvailable(macOS: mac) else { continue }
         available.insert(name)
-        if !key.isEmpty { releases[name] = SymbolRelease(key) }
+        releases[name] = SymbolRelease(key)
     }
 
     func isLocalizedVariant(_ name: String) -> Bool {
@@ -176,10 +197,11 @@ func loadSymbolData() -> SymbolData {
         }
     }
     // Synonyms derived from the name itself: "0.circle" → "zero", "plus" → "+", etc.
-    for name in available {
+    for name in allSymbols {
         let generated = SymbolSynonyms.terms(for: name)
         if !generated.isEmpty { searchTerms[name, default: []].append(contentsOf: generated) }
     }
+    let searchIndex = SymbolSearch.makeIndex(names: allSymbols, terms: searchTerms)
 
     // MARK: Variant families
     var families: [[String]] = []
@@ -203,16 +225,14 @@ func loadSymbolData() -> SymbolData {
         for member in family { variants[member] = family }
     }
 
-    let data = SymbolData(
+    return SymbolData(
         allSymbols: allSymbols,
         categories: categories,
         symbolCategoryMap: symbolCategoryMap,
         whatsNew: whatsNew,
         releases: releases,
         macOSVersions: macOSVersions,
-        searchTerms: searchTerms,
+        searchIndex: searchIndex,
         variants: variants
     )
-    cachedSymbolData = data
-    return data
 }

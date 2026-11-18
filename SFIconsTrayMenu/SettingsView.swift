@@ -14,8 +14,6 @@ struct SettingsView: View {
     @State private var isEnabled = LaunchAtLogin.isEnabled
     
     @AppStorage("showLaunchAnimation") private var showLaunchAnimation = true
-    @AppStorage("showSymbolNames") private var showSymbolNames = true
-    @AppStorage("defaultIconSize") private var defaultIconSize: Double = 28
 
     var body: some View {
         Form {

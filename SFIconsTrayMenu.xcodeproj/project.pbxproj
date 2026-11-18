@@ -7,16 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		15DF8F0A2F0BD5FF00E2F184 /* HotKeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15DF8F092F0BD5FF00E2F184 /* HotKeyManager.swift */; };
 		15E8E55F2F700A3B00C73499 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 15E8E55E2F700A3B00C73499 /* LaunchAtLogin */; };
 		15E8E5622F70181900C73499 /* TrayIconAppLogo.icon in Resources */ = {isa = PBXBuildFile; fileRef = 15E8E5612F70181900C73499 /* TrayIconAppLogo.icon */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		AB0C0DE00000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 15D620A62F0A2BE90047F64D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 15D620AD2F0A2BE90047F64D;
+			remoteInfo = SFIconsTrayMenu;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		15D620AE2F0A2BE90047F64D /* SFIconsTrayMenu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SFIconsTrayMenu.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		15DF8EF42F0BCF1300E2F184 /* SFIconsTrayMenuHelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SFIconsTrayMenuHelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		15DF8F092F0BD5FF00E2F184 /* HotKeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyManager.swift; sourceTree = "<group>"; };
 		15E8E5612F70181900C73499 /* TrayIconAppLogo.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = TrayIconAppLogo.icon; sourceTree = "<group>"; };
+		AB0C0DE00000000000000003 /* SFIconsTrayMenuTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SFIconsTrayMenuTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -26,13 +34,6 @@
 				Info.plist,
 			);
 			target = 15D620AD2F0A2BE90047F64D /* SFIconsTrayMenu */;
-		};
-		15E8E5602F700AA800C73499 /* Exceptions for "TraySFIconMenuHelper" folder in "SFIconsTrayMenuHelper" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 15DF8EF32F0BCF1300E2F184 /* SFIconsTrayMenuHelper */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -45,12 +46,9 @@
 			path = SFIconsTrayMenu;
 			sourceTree = "<group>";
 		};
-		15DF8EF52F0BCF1300E2F184 /* TraySFIconMenuHelper */ = {
+		AB0C0DE00000000000000004 /* SFIconsTrayMenuTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				15E8E5602F700AA800C73499 /* Exceptions for "TraySFIconMenuHelper" folder in "SFIconsTrayMenuHelper" target */,
-			);
-			path = TraySFIconMenuHelper;
+			path = SFIconsTrayMenuTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -64,7 +62,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		15DF8EF12F0BCF1300E2F184 /* Frameworks */ = {
+		AB0C0DE00000000000000005 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -78,9 +76,8 @@
 			isa = PBXGroup;
 			children = (
 				15D620B02F0A2BE90047F64D /* SFIconsTrayMenu */,
-				15DF8EF52F0BCF1300E2F184 /* TraySFIconMenuHelper */,
+				AB0C0DE00000000000000004 /* SFIconsTrayMenuTests */,
 				15D620AF2F0A2BE90047F64D /* Products */,
-				15DF8F092F0BD5FF00E2F184 /* HotKeyManager.swift */,
 				15E8E55A2F70099D00C73499 /* Frameworks */,
 				15E8E5612F70181900C73499 /* TrayIconAppLogo.icon */,
 			);
@@ -90,7 +87,7 @@
 			isa = PBXGroup;
 			children = (
 				15D620AE2F0A2BE90047F64D /* SFIconsTrayMenu.app */,
-				15DF8EF42F0BCF1300E2F184 /* SFIconsTrayMenuHelper.app */,
+				AB0C0DE00000000000000003 /* SFIconsTrayMenuTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -128,27 +125,28 @@
 			productReference = 15D620AE2F0A2BE90047F64D /* SFIconsTrayMenu.app */;
 			productType = "com.apple.product-type.application";
 		};
-		15DF8EF32F0BCF1300E2F184 /* SFIconsTrayMenuHelper */ = {
+		AB0C0DE00000000000000008 /* SFIconsTrayMenuTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 15DF8EFC2F0BCF1400E2F184 /* Build configuration list for PBXNativeTarget "SFIconsTrayMenuHelper" */;
+			buildConfigurationList = AB0C0DE0000000000000000B /* Build configuration list for PBXNativeTarget "SFIconsTrayMenuTests" */;
 			buildPhases = (
-				15DF8EF02F0BCF1300E2F184 /* Sources */,
-				15DF8EF12F0BCF1300E2F184 /* Frameworks */,
-				15DF8EF22F0BCF1300E2F184 /* Resources */,
+				AB0C0DE00000000000000006 /* Sources */,
+				AB0C0DE00000000000000005 /* Frameworks */,
+				AB0C0DE00000000000000007 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AB0C0DE00000000000000002 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				15DF8EF52F0BCF1300E2F184 /* TraySFIconMenuHelper */,
+				AB0C0DE00000000000000004 /* SFIconsTrayMenuTests */,
 			);
-			name = SFIconsTrayMenuHelper;
+			name = SFIconsTrayMenuTests;
 			packageProductDependencies = (
 			);
-			productName = TraySFIconMenuHelper;
-			productReference = 15DF8EF42F0BCF1300E2F184 /* SFIconsTrayMenuHelper.app */;
-			productType = "com.apple.product-type.application";
+			productName = SFIconsTrayMenuTests;
+			productReference = AB0C0DE00000000000000003 /* SFIconsTrayMenuTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -163,8 +161,9 @@
 					15D620AD2F0A2BE90047F64D = {
 						CreatedOnToolsVersion = 26.2;
 					};
-					15DF8EF32F0BCF1300E2F184 = {
+					AB0C0DE00000000000000008 = {
 						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 15D620AD2F0A2BE90047F64D;
 					};
 				};
 			};
@@ -186,7 +185,7 @@
 			projectRoot = "";
 			targets = (
 				15D620AD2F0A2BE90047F64D /* SFIconsTrayMenu */,
-				15DF8EF32F0BCF1300E2F184 /* SFIconsTrayMenuHelper */,
+				AB0C0DE00000000000000008 /* SFIconsTrayMenuTests */,
 			);
 		};
 /* End PBXProject section */
@@ -200,7 +199,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		15DF8EF22F0BCF1300E2F184 /* Resources */ = {
+		AB0C0DE00000000000000007 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -214,11 +213,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15DF8F0A2F0BD5FF00E2F184 /* HotKeyManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		15DF8EF02F0BCF1300E2F184 /* Sources */ = {
+		AB0C0DE00000000000000006 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -226,6 +224,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AB0C0DE00000000000000002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 15D620AD2F0A2BE90047F64D /* SFIconsTrayMenu */;
+			targetProxy = AB0C0DE00000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		15D620B72F0A2BEA0047F64D /* Debug */ = {
@@ -371,10 +377,10 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SFIconsTrayMenu/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "SF Icons Tray Menu";
+				INFOPLIST_KEY_CFBundleDisplayName = TraySFIconMenu;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Abdallah Kamash";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -412,10 +418,10 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SFIconsTrayMenu/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "SF Icons Tray Menu";
+				INFOPLIST_KEY_CFBundleDisplayName = TraySFIconMenu;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Abdallah Kamash";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -434,73 +440,47 @@
 			};
 			name = Release;
 		};
-		15DF8EFD2F0BCF1400E2F184 /* Debug */ = {
+		AB0C0DE00000000000000009 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9VVK84L9D;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TraySFIconMenuHelper/Info.plist;
-				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kamash.TraySFIconMenuHelper;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kamash.SFIconsTrayMenuTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SFIconsTrayMenu.app/Contents/MacOS/SFIconsTrayMenu";
 			};
 			name = Debug;
 		};
-		15DF8EFE2F0BCF1400E2F184 /* Release */ = {
+		AB0C0DE0000000000000000A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9VVK84L9D;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TraySFIconMenuHelper/Info.plist;
-				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kamash.TraySFIconMenuHelper;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kamash.SFIconsTrayMenuTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SFIconsTrayMenu.app/Contents/MacOS/SFIconsTrayMenu";
 			};
 			name = Release;
 		};
@@ -525,11 +505,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		15DF8EFC2F0BCF1400E2F184 /* Build configuration list for PBXNativeTarget "SFIconsTrayMenuHelper" */ = {
+		AB0C0DE0000000000000000B /* Build configuration list for PBXNativeTarget "SFIconsTrayMenuTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				15DF8EFD2F0BCF1400E2F184 /* Debug */,
-				15DF8EFE2F0BCF1400E2F184 /* Release */,
+				AB0C0DE00000000000000009 /* Debug */,
+				AB0C0DE0000000000000000A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -541,8 +521,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin-Modern";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

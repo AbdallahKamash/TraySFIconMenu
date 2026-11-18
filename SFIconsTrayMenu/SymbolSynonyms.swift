@@ -178,6 +178,51 @@ nonisolated enum SymbolSynonyms {
 
 nonisolated enum SymbolSearch {
 
+    /// Everything the matcher needs about one symbol, computed once at load time so
+    /// each keystroke only does lookups and a couple of substring checks.
+    struct Entry: Sendable {
+        let name: String
+        let length: Int
+        let components: [String]
+        /// "01.circle" → "1.circle", for prefix ranking of number searches.
+        let canonical: String
+        /// Values of numeric components: "01.circle" → [1].
+        let numbers: Set<Int>
+        /// Name components, whole terms, and each word of multi-word terms.
+        let exactWords: Set<String>
+        /// All terms joined, for the cheap "keyword contains token" fallback.
+        let termBlob: String
+    }
+
+    typealias Index = [String: Entry]
+
+    static func makeIndex(names: [String], terms: [String: [String]]) -> Index {
+        var index = Index(minimumCapacity: names.count)
+        for name in names {
+            let components = name.split(separator: ".").map(String.init)
+            let symbolTerms = terms[name] ?? []
+            var exact = Set(components)
+            for term in symbolTerms {
+                exact.insert(term)
+                for word in term.split(separator: " ") where word.count < term.count {
+                    exact.insert(String(word))
+                }
+            }
+            let numericParts = components.filter { !$0.isEmpty && $0.allSatisfy(\.isNumber) }
+            index[name] = Entry(
+                name: name,
+                length: name.count,
+                components: components,
+                canonical: components.map { c in
+                    c.count > 1 && c.allSatisfy(\.isNumber) ? String(Int(c) ?? 0) : c
+                }.joined(separator: "."),
+                numbers: Set(numericParts.compactMap { Int($0) }),
+                exactWords: exact,
+                termBlob: symbolTerms.joined(separator: "\u{1}"))
+        }
+        return index
+    }
+
     /// Splits a query on spaces, dots and word-hyphens, then turns number words into digits.
     /// "one.circle" → ["1", "circle"], "Twenty-One Square" → ["21", "square"].
     static func tokens(from query: String) -> [String] {
@@ -192,56 +237,56 @@ nonisolated enum SymbolSearch {
         return SymbolSynonyms.normalizeNumberWords(raw)
     }
 
+    private struct Token {
+        let text: String
+        let number: Int?
+    }
+
     /// How well one query token matches a symbol: 0 = no match, higher is better.
-    private static func level(of token: String, components: [String], name: String, terms: [String]) -> Int {
-        if let value = Int(token), token.allSatisfy(\.isNumber) {
+    private static func level(of token: Token, in entry: Entry) -> Int {
+        if let value = token.number {
             // Numbers compare by value: "1" and "01" both match "01.circle" and "1.circle".
-            if components.contains(where: { $0.allSatisfy(\.isNumber) && Int($0) == value }) { return 4 }
-            return name.contains(token) ? 1 : 0
+            if entry.numbers.contains(value) { return 4 }
+            return entry.name.contains(token.text) ? 1 : 0
         }
-        if components.contains(token) { return 4 }
-        if terms.contains(where: { $0 == token || $0.split(separator: " ").contains(Substring(token)) }) { return 4 }
-        if components.contains(where: { $0.hasPrefix(token) }) { return 3 }
-        if name.contains(token) { return 2 }
-        if terms.contains(where: { $0.contains(token) }) { return 1 }
+        if entry.exactWords.contains(token.text) { return 4 }
+        if entry.components.contains(where: { $0.hasPrefix(token.text) }) { return 3 }
+        if entry.name.contains(token.text) { return 2 }
+        if entry.termBlob.contains(token.text) { return 1 }
         return 0
     }
 
-    /// Strips leading zeros from number components: "01.circle" → "1.circle".
-    private static func canonical(_ components: [String]) -> String {
-        components.map { c in
-            c.count > 1 && c.allSatisfy(\.isNumber) ? String(Int(c) ?? 0) : c
-        }.joined(separator: ".")
-    }
+    static func filter(_ list: [String], query: String, index: Index) -> [String] {
+        let texts = tokens(from: query)
+        guard !texts.isEmpty else { return list }
+        let tokens = texts.map { t in
+            Token(text: t, number: t.allSatisfy(\.isNumber) ? Int(t) : nil)
+        }
+        let prefix = texts.joined(separator: ".")
 
-    static func filter(_ list: [String], query: String, terms: [String: [String]]) -> [String] {
-        let tokens = tokens(from: query)
-        guard !tokens.isEmpty else { return list }
-        let prefix = tokens.joined(separator: ".")
-
-        struct Hit { let name: String; let minLevel: Int; let total: Int; let prefix: Bool }
+        struct Hit { let name: String; let length: Int; let minLevel: Int; let total: Int; let prefix: Bool }
         var hits: [Hit] = []
+        hits.reserveCapacity(list.count / 4)
         for name in list {
-            let components = name.split(separator: ".").map(String.init)
-            let symbolTerms = terms[name] ?? []
+            guard let entry = index[name] else { continue }
             var minLevel = Int.max
             var total = 0
             for token in tokens {
-                let l = level(of: token, components: components, name: name, terms: symbolTerms)
+                let l = level(of: token, in: entry)
                 if l == 0 { minLevel = 0; break }
                 minLevel = min(minLevel, l)
                 total += l
             }
             guard minLevel > 0 else { continue }
-            let isPrefix = name.hasPrefix(prefix) || canonical(components).hasPrefix(prefix)
-            hits.append(Hit(name: name, minLevel: minLevel, total: total, prefix: isPrefix))
+            let isPrefix = name.hasPrefix(prefix) || entry.canonical.hasPrefix(prefix)
+            hits.append(Hit(name: name, length: entry.length, minLevel: minLevel, total: total, prefix: isPrefix))
         }
 
         hits.sort { a, b in
             if a.minLevel != b.minLevel { return a.minLevel > b.minLevel }
             if a.prefix != b.prefix { return a.prefix }
             if a.total != b.total { return a.total > b.total }
-            if a.name.count != b.name.count { return a.name.count < b.name.count }
+            if a.length != b.length { return a.length < b.length }
             return a.name < b.name
         }
         return hits.map(\.name)
