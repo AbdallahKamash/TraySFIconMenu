@@ -44,31 +44,7 @@ struct SymbolBrowserView: View {
         default: list = list.filter { data.symbolCategoryMap[$0]?.contains(selectedCategory) ?? false }
         }
 
-        let tokens = query.lowercased().split(whereSeparator: { $0 == " " }).map(String.init)
-        if !tokens.isEmpty {
-            // Every token must match the name or a keyword/alias. Name matches rank first.
-            var nameHits: [String] = []
-            var termHits: [String] = []
-            for name in list {
-                let terms = data.searchTerms[name] ?? []
-                var allInName = true
-                var allMatch = true
-                for token in tokens {
-                    if name.contains(token) { continue }
-                    allInName = false
-                    if !terms.contains(where: { $0.contains(token) }) { allMatch = false; break }
-                }
-                if allInName { nameHits.append(name) } else if allMatch { termHits.append(name) }
-            }
-            let joined = tokens.joined(separator: ".")
-            nameHits.sort { a, b in
-                let ap = a.hasPrefix(joined), bp = b.hasPrefix(joined)
-                if ap != bp { return ap }
-                if ap && a.count != b.count { return a.count < b.count }
-                return a < b
-            }
-            list = nameHits + termHits
-        }
+        list = SymbolSearch.filter(list, query: query, terms: data.searchTerms)
 
         filtered = list
     }

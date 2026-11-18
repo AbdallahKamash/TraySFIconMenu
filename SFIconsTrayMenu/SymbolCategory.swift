@@ -175,6 +175,11 @@ func loadSymbolData() -> SymbolData {
             searchTerms[current, default: []].append(alias.lowercased())
         }
     }
+    // Synonyms derived from the name itself: "0.circle" → "zero", "plus" → "+", etc.
+    for name in available {
+        let generated = SymbolSynonyms.terms(for: name)
+        if !generated.isEmpty { searchTerms[name, default: []].append(contentsOf: generated) }
+    }
 
     // MARK: Variant families
     var families: [[String]] = []
