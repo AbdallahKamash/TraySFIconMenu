@@ -25,6 +25,7 @@ struct SymbolBrowserView: View {
     @State private var showCopyToast = false
     @State private var copiedSymbolName = ""
     @State private var copiedWhat = "name"
+    @State private var accessNotice = InlineAccessNotice.shared
     @State private var eventMonitor: Any?
     @State private var scrollToTopID = UUID()
     /// The popover's window, so the key monitor only reacts to keys typed here.
@@ -79,6 +80,12 @@ struct SymbolBrowserView: View {
                 Divider()
 
                 VStack(spacing: 0) {
+
+                    if accessNotice.isVisible && !Accessibility.isTrusted {
+                        InlineAccessBanner { accessNotice.isVisible = false }
+                            .padding([.horizontal, .top], 12)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
 
                     TextField("Search SF Symbols", text: $query)
                         .textFieldStyle(.roundedBorder)
@@ -236,6 +243,7 @@ struct SymbolBrowserView: View {
             }
         }
         .onDisappear {
+            accessNotice.isVisible = false  // only relevant to the open that triggered it
             if let monitor = eventMonitor {
                 NSEvent.removeMonitor(monitor)
                 eventMonitor = nil
@@ -408,3 +416,40 @@ struct SymbolBrowserView: View {
     }
 }
 
+
+/// Shown when the shortcut was pressed in an editor but inline insert couldn't open
+/// because Accessibility access is off.
+private struct InlineAccessBanner: View {
+    var onDismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "character.cursor.ibeam")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(Color.accentColor)
+                .padding(.top, 1)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Inline insert needs Accessibility access")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("Allow it to search and insert symbols right at your cursor in Xcode and VS Code.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Allow Access…") { Accessibility.requestAccess() }
+                    .controlSize(.small)
+                    .padding(.top, 2)
+            }
+            Spacer(minLength: 0)
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 16, height: 16)
+            }
+            .buttonStyle(.plain)
+            .help("Dismiss")
+        }
+        .padding(10)
+        .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+}

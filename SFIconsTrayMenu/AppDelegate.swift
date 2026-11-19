@@ -109,7 +109,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 InlineInsertController.shared.show(context: context)
                 return
             }
-            if !Accessibility.isTrusted && offerInlineInsertAccess() { return }
+            if !Accessibility.isTrusted {
+                if offerInlineInsertAccess() { return }
+                // Already explained once: open the tray, with a notice saying why.
+                if !popover.isShown { InlineAccessNotice.shared.isVisible = true }
+            }
         }
         togglePopover()
     }

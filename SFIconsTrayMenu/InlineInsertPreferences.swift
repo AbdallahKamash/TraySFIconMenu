@@ -10,6 +10,14 @@
 
 import Foundation
 
+/// Asks the tray browser to explain why inline insert didn't open: the shortcut was
+/// pressed in an editor while Accessibility access is off.
+@Observable
+final class InlineAccessNotice {
+    static let shared = InlineAccessNotice()
+    var isVisible = false
+}
+
 enum InlineInsertPreferences {
 
     enum Key {
