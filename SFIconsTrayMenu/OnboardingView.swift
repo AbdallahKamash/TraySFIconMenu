@@ -101,8 +101,8 @@ struct OnboardingView: View {
                    detail: "Select a symbol and press Return or Space, or ⌘C.")
             TipRow(icon: "cursorarrow.click.2", title: "Right-click for more",
                    detail: "Copy the icon image, or pick a variant like .fill or .slash.")
-            TipRow(icon: "arrow.up.and.down.and.arrow.left.and.right", title: "Keyboard first",
-                   detail: "Arrows move around the grid, Tab switches between panes.")
+            TipRow(icon: "swift", title: "Insert while you code",
+                   detail: "In a Swift file in Xcode or VS Code, the shortcut opens a search at your cursor and types the symbol for you.")
             Spacer()
         }
         .padding(.horizontal, 44)

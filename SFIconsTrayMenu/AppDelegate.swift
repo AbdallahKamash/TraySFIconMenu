@@ -26,6 +26,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // When hosting unit tests, stay out of the way: no menu bar item, hotkey or windows.
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil { return }
+
+        // Must run before anything reads settings (the shortcut, first-run flag, recents).
+        Self.importSettingsFromSandboxContainer()
         
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
@@ -42,7 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         
         HotKeyManager.shared.onHotKey = { [weak self] in
-            self?.togglePopover()
+            self?.handleHotKey()
         }
         HotKeyManager.shared.registerSaved()
 
@@ -62,6 +65,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// Earlier builds ran in the App Sandbox, which kept settings in a private container.
+    /// The sandbox is now off (it blocks the Accessibility access inline insert needs), so
+    /// copy those settings over once; otherwise the tour, shortcut and recents would reset.
+    private static func importSettingsFromSandboxContainer() {
+        let defaults = UserDefaults.standard
+        let doneKey = "importedSandboxSettings"
+        guard !defaults.bool(forKey: doneKey), let bundleID = Bundle.main.bundleIdentifier else { return }
+        defaults.set(true, forKey: doneKey)
+        // Only on a fresh, unsandboxed profile; never overwrite settings made since.
+        guard defaults.object(forKey: "hasRunBefore") == nil else { return }
+
+        let url = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Containers/\(bundleID)/Data/Library/Preferences/\(bundleID).plist")
+        guard let old = NSDictionary(contentsOf: url) as? [String: Any] else { return }
+        for (key, value) in old where !key.hasPrefix("NS") && !key.hasPrefix("Apple") && !key.hasPrefix("com.apple") {
+            defaults.set(value, forKey: key)
+        }
+    }
+
     @objc private func handleClick() {
         guard let event = NSApp.currentEvent else { return }
         if event.type == .rightMouseUp {
@@ -69,6 +91,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             togglePopover()
         }
+    }
+
+    /// The app shortcut: inline insert when editing Swift in Xcode / VS Code,
+    /// otherwise the menu bar browser.
+    private func handleHotKey() {
+        if InlineInsertController.shared.isShown {
+            InlineInsertController.shared.close()
+            return
+        }
+        let inlineEnabled = UserDefaults.standard.object(forKey: "inlineInsertEnabled") as? Bool ?? true
+        if inlineEnabled, !popover.isShown, EditorContext.editorIsFrontmost {
+            if let context = EditorContext.capture() {
+                InlineInsertController.shared.show(context: context)
+                return
+            }
+            if !Accessibility.isTrusted && offerInlineInsertAccess() { return }
+        }
+        togglePopover()
+    }
+
+    /// Explains inline insert once, the first time the shortcut is used in an editor
+    /// without Accessibility access. Returns true if the user went to grant access.
+    private func offerInlineInsertAccess() -> Bool {
+        let askedKey = "askedForInlineInsertAccess"
+        guard !UserDefaults.standard.bool(forKey: askedKey) else { return false }
+        UserDefaults.standard.set(true, forKey: askedKey)
+
+        let alert = NSAlert()
+        alert.messageText = "Insert symbols right where you type?"
+        alert.informativeText = """
+            In a Swift file in Xcode or VS Code, the shortcut can open a small search at your             text cursor and type the symbol into your code.
+
+            This needs Accessibility access so TraySFIconMenu can find the cursor and type for you.             You can change this any time in Settings.
+            """
+        alert.addButton(withTitle: "Allow Access…")
+        alert.addButton(withTitle: "Not Now")
+        NSApp.activate(ignoringOtherApps: true)
+        guard alert.runModal() == .alertFirstButtonReturn else { return false }
+        Accessibility.requestAccess()
+        return true
     }
 
     private func togglePopover() {

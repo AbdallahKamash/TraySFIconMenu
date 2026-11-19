@@ -252,6 +252,7 @@ struct SymbolBrowserView: View {
     }
 
     private func copyIcon(_ name: String) {
+        RecentSymbols.add(name)
         let pb = NSPasteboard.general
         pb.clearContents()
         if let image = renderedSymbol(name) {
@@ -269,6 +270,7 @@ struct SymbolBrowserView: View {
     }
 
     private func copySymbol(_ name: String) {
+        RecentSymbols.add(name)
         let pb = NSPasteboard.general
         pb.clearContents()
         pb.setString(name, forType: .string)

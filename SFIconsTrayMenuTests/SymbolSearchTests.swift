@@ -141,3 +141,47 @@ import Testing
         #expect(HotKeyCombination(event: event(17, "t", .shift)) == nil)
     }
 }
+
+// MARK: - Inline insert
+
+@Suite struct InsertTextTests {
+    @Test(arguments: [
+        ("Image(systemName: \"", "star.fill"),                    // inside quotes → just the name
+        ("Image(systemName:", " \"star.fill\""),                 // right after the label → quoted
+        ("Image(systemName: ", "\"star.fill\""),
+        ("Label(\"Fav\", systemImage: ", "\"star.fill\""),
+        ("NSImage(systemSymbolName: ", "\"star.fill\""),
+        ("let name = ", "star.fill"),                            // anywhere else → plain name
+        ("", "star.fill"),
+    ])
+    func automaticInsertion(before: String, expected: String) {
+        #expect(InsertText.text(for: "star.fill", before: before, style: .automatic) == expected)
+    }
+
+    @Test func closedQuotesAreNotTreatedAsInsideQuotes() {
+        // `"a" ` has an even number of quotes: the cursor is outside them.
+        #expect(InsertText.text(for: "star", before: "Text(\"a\") ", style: .automatic) == "star")
+    }
+
+    @Test func optionReturnInsertsImageCall() {
+        #expect(InsertText.text(for: "star", before: "VStack { ", style: .imageCall) == "Image(systemName: \"star\")")
+        // Already inside quotes: don't nest a second Image(...).
+        #expect(InsertText.text(for: "star", before: "Image(systemName: \"", style: .imageCall) == "star")
+    }
+}
+
+@Suite @MainActor struct EditorFileNameTests {
+    @Test func readsXcodeDocumentURL() {
+        #expect(EditorContext.swiftFileName(document: "file:///Users/me/App/ContentView.swift", title: "App") == "ContentView.swift")
+    }
+
+    @Test func readsVSCodeTitle() {
+        #expect(EditorContext.swiftFileName(document: nil, title: "● AppDelegate.swift — TraySFIconMenu") == "AppDelegate.swift")
+        #expect(EditorContext.swiftFileName(document: nil, title: "Package.swift - App - Visual Studio Code") == "Package.swift")
+    }
+
+    @Test func ignoresNonSwiftFiles() {
+        #expect(EditorContext.swiftFileName(document: "file:///Users/me/README.md", title: "README.md — App") == nil)
+        #expect(EditorContext.swiftFileName(document: nil, title: "notes.swiftpm — x") == nil)
+    }
+}
