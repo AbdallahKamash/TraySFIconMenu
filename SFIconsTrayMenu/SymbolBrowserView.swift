@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct SymbolBrowserView: View {
+    /// Closes the popover (Esc with an empty search).
+    var onClose: () -> Void = {}
+
     @State private var query = ""
     @State private var symbolData: SymbolData? = nil
     @State private var categories: [SymbolCategory] = []
@@ -21,6 +24,7 @@ struct SymbolBrowserView: View {
     @State private var selectedSymbolIndex: Int? = nil
     @State private var showCopyToast = false
     @State private var copiedSymbolName = ""
+    @State private var copiedWhat = "name"
     @State private var eventMonitor: Any?
     @State private var scrollToTopID = UUID()
     /// The popover's window, so the key monitor only reacts to keys typed here.
@@ -100,12 +104,17 @@ struct SymbolBrowserView: View {
                                 ForEach(Array(filtered.enumerated()), id: \.offset) { index, name in
                                     SymbolCell(
                                         name: name,
-                                        isSelected: selectedSymbolIndex == index
-                                    ) {
-                                        searchFieldFocused = false
-                                        isGridFocused = true
-                                        selectedSymbolIndex = index
-                                    }
+                                        isSelected: selectedSymbolIndex == index,
+                                        onTap: {
+                                            searchFieldFocused = false
+                                            isGridFocused = true
+                                            selectedSymbolIndex = index
+                                        },
+                                        onDoubleTap: {
+                                            selectedSymbolIndex = index
+                                            copySymbol(name)
+                                        }
+                                    )
                                     .id(index)
                                     .contextMenu {
                                         symbolContextMenu(name)
@@ -158,7 +167,7 @@ struct SymbolBrowserView: View {
             if showCopyToast {
                 VStack {
                     Spacer()
-                    Text("Copied: \(copiedSymbolName)")
+                    Text("Copied \(copiedWhat): \(copiedSymbolName)")
                         .font(.system(size: 12, weight: .medium))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
@@ -170,7 +179,7 @@ struct SymbolBrowserView: View {
                             RoundedRectangle(cornerRadius: 8).stroke(
                                 Color.primary.opacity(0.1), lineWidth: 0.5)
                         )
-                        .padding(.bottom, 20)
+                        .padding(.bottom, 40)  // clear of the symbol-count footer
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 .animation(.spring(), value: showCopyToast)
@@ -203,6 +212,10 @@ struct SymbolBrowserView: View {
             self.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 // Only handle keys typed in the browser popover, never in Settings etc.
                 guard let hostWindow, event.window === hostWindow else { return event }
+                if event.keyCode == 53 {  // Esc: clear the search first, then close
+                    handleEscape()
+                    return nil
+                }
                 if searchFieldFocused {
                     if event.keyCode == 125 || event.keyCode == 48 {
                         if !filtered.isEmpty {
@@ -259,6 +272,7 @@ struct SymbolBrowserView: View {
             pb.writeObjects([image])
         }
 
+        copiedWhat = "icon"
         copiedSymbolName = name
         withAnimation { showCopyToast = true }
 
@@ -275,6 +289,7 @@ struct SymbolBrowserView: View {
         pb.clearContents()
         pb.setString(name, forType: .string)
 
+        copiedWhat = "name"
         copiedSymbolName = name
         withAnimation { showCopyToast = true }
 
@@ -310,6 +325,17 @@ struct SymbolBrowserView: View {
         let image = NSImage(size: size)
         image.addRepresentation(rep)
         return image
+    }
+
+    private func handleEscape() {
+        if query.isEmpty {
+            onClose()
+        } else {
+            query = ""
+            selectedSymbolIndex = nil
+            isGridFocused = false
+            searchFieldFocused = true
+        }
     }
 
     private func handleGridKeyboard(_ event: NSEvent, scrollProxy: ScrollViewProxy) {

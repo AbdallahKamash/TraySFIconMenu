@@ -14,6 +14,7 @@ enum AppInfo {
     static let githubProfile = URL(string: "https://github.com/AbdallahKamash")!
     static let repository = URL(string: "https://github.com/AbdallahKamash/TraySFIconMenu")!
     static let issues = URL(string: "https://github.com/AbdallahKamash/TraySFIconMenu/issues")!
+    static let releases = URL(string: "https://github.com/AbdallahKamash/TraySFIconMenu/releases")!
 
     static var version: String {
         let info = Bundle.main.infoDictionary
@@ -111,7 +112,7 @@ struct AboutView: View {
                            url: AppInfo.repository)
                 LinkButton(title: "Report an Issue", icon: "exclamationmark.bubble",
                            url: AppInfo.issues)
-                LinkButton(title: "Star on GitHub", icon: "star", url: AppInfo.repository)
+                LinkButton(title: "Releases", icon: "shippingbox", url: AppInfo.releases)
             }
         }
     }

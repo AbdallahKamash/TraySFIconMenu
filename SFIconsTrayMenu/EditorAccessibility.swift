@@ -32,28 +32,26 @@ enum Accessibility {
 /// A snapshot of the editor at the moment the shortcut was pressed.
 struct EditorContext {
     let appName: String
-    let fileName: String
+    /// The open .swift file, or nil when it isn't one (only possible with the "Any file" setting).
+    let fileName: String?
     /// Text cursor in Cocoa screen coordinates (bottom-left origin), if we could find it.
     let caretRect: CGRect?
     /// Up to ~60 characters before the cursor, used to decide how to insert.
     let textBeforeCaret: String
 
-    static let editorBundleIDs: Set<String> = [
-        "com.apple.dt.Xcode",
-        "com.microsoft.VSCode",
-        "com.microsoft.VSCodeInsiders",
-        "com.vscodium",
-        "com.todesktop.230313mzl4w4u92",  // Cursor (VS Code based)
-    ]
+    /// Every editor inline insert knows how to work with.
+    static let editorBundleIDs: Set<String> = InlineInsertPreferences.Editor.allCases
+        .reduce(into: []) { $0.formUnion($1.bundleIDs) }
 
-    /// True when the frontmost app is one of the supported editors.
+    /// True when the frontmost app is an editor the user has switched on in Settings.
     static var editorIsFrontmost: Bool {
         guard let id = NSWorkspace.shared.frontmostApplication?.bundleIdentifier else { return false }
-        return editorBundleIDs.contains(id)
+        return InlineInsertPreferences.enabledBundleIDs.contains(id)
     }
 
-    /// Reads the frontmost editor. Returns nil unless it's a supported editor with a
-    /// .swift file open and Accessibility access is granted.
+    /// Reads the frontmost editor. Returns nil unless it's an editor the user switched on,
+    /// Accessibility access is granted, and (with the default "Swift files only" setting)
+    /// a .swift file is open.
     static func capture() -> EditorContext? {
         guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
         return capture(app: app)
@@ -63,7 +61,7 @@ struct EditorContext {
     static func capture(app: NSRunningApplication) -> EditorContext? {
         guard Accessibility.isTrusted,
             let bundleID = app.bundleIdentifier,
-            editorBundleIDs.contains(bundleID)
+            InlineInsertPreferences.enabledBundleIDs.contains(bundleID)
         else { return nil }
 
         let appElement = AXUIElementCreateApplication(app.processIdentifier)
@@ -74,10 +72,10 @@ struct EditorContext {
             AXUIElementSetAttributeValue(appElement, "AXManualAccessibility" as CFString, kCFBooleanTrue)
         }
 
-        guard let window = appElement.element(kAXFocusedWindowAttribute),
-            let fileName = swiftFileName(
-                document: window.string(kAXDocumentAttribute), title: window.string(kAXTitleAttribute))
-        else { return nil }
+        guard let window = appElement.element(kAXFocusedWindowAttribute) else { return nil }
+        let fileName = swiftFileName(
+            document: window.string(kAXDocumentAttribute), title: window.string(kAXTitleAttribute))
+        if fileName == nil && InlineInsertPreferences.scope == .swiftFiles { return nil }
 
         let focused = appElement.element(kAXFocusedUIElementAttribute)
         return EditorContext(
@@ -160,8 +158,9 @@ struct EditorContext {
 // MARK: - Typing into the editor
 
 enum EditorInserter {
-    /// Pastes `text` into the frontmost app with ⌘V, then puts the user's clipboard back.
-    static func insert(_ text: String) {
+    /// Pastes `text` into the frontmost app with ⌘V, then (optionally) puts the user's
+    /// clipboard back.
+    static func insert(_ text: String, restoreClipboard: Bool = true) {
         let pasteboard = NSPasteboard.general
         let saved = snapshot(pasteboard)
 
@@ -170,6 +169,7 @@ enum EditorInserter {
         let ourChange = pasteboard.changeCount
 
         postCommandV()
+        guard restoreClipboard else { return }
 
         // Restore once the editor has read the clipboard, unless something else copied meanwhile.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -206,6 +206,8 @@ enum EditorInserter {
 nonisolated enum InsertStyle: Sendable {
     /// Decide from the code around the cursor.
     case automatic
+    /// Always just `star.fill`.
+    case nameOnly
     /// `Image(systemName: "star.fill")`
     case imageCall
 }
@@ -221,6 +223,8 @@ nonisolated enum InsertText {
         let insideQuotes = before.last == "\"" && before.filter { $0 == "\"" }.count % 2 == 1
 
         switch style {
+        case .nameOnly:
+            return symbol
         case .imageCall:
             return insideQuotes ? symbol : "Image(systemName: \"\(symbol)\")"
         case .automatic:

@@ -185,3 +185,35 @@ import Testing
         #expect(EditorContext.swiftFileName(document: nil, title: "notes.swiftpm — x") == nil)
     }
 }
+
+// MARK: - Inline insert preferences
+
+@Suite @MainActor struct InlineInsertPreferenceTests {
+    @Test func nameOnlyNeverAddsQuotes() {
+        #expect(InsertText.text(for: "star", before: "Image(systemName: ", style: .nameOnly) == "star")
+        #expect(InsertText.text(for: "star", before: "Image(systemName: \"", style: .nameOnly) == "star")
+    }
+
+    @Test func optionReturnAlwaysOffersTheAlternative() {
+        typealias Format = InlineInsertPreferences.Format
+        #expect(Format.smart.returnStyle == .automatic)
+        #expect(Format.smart.optionReturnStyle == .imageCall)
+        #expect(Format.nameOnly.optionReturnStyle == .imageCall)
+        // When Return already inserts Image(systemName:), ⌥Return falls back to smart.
+        #expect(Format.imageCall.returnStyle == .imageCall)
+        #expect(Format.imageCall.optionReturnStyle == .automatic)
+    }
+
+    @Test func editorGroupsCoverEveryKnownEditor() {
+        let all = InlineInsertPreferences.Editor.allCases.reduce(into: Set<String>()) { $0.formUnion($1.bundleIDs) }
+        #expect(all == EditorContext.editorBundleIDs)
+        #expect(all.contains("com.apple.dt.Xcode"))
+        #expect(all.contains("com.microsoft.VSCode"))
+    }
+
+    @Test func defaultsAreRegistered() {
+        InlineInsertPreferences.registerDefaults()
+        #expect(InlineInsertPreferences.suggestionRange.contains(InlineInsertPreferences.maxSuggestions))
+        #expect(InlineInsertPreferences.Scope.allCases.count == 2)
+    }
+}

@@ -11,6 +11,8 @@ struct SymbolCell: View {
     let name: String
     let isSelected: Bool
     var onTap: () -> Void
+    /// Double-click copies the symbol's name.
+    var onDoubleTap: () -> Void = {}
     
     var body: some View {
         VStack(spacing: 4) {
@@ -34,6 +36,9 @@ struct SymbolCell: View {
         }
         .frame(width: 80, height: 90)
         .contentShape(Rectangle())
+        .onTapGesture(count: 2) {
+            onDoubleTap()
+        }
         .onTapGesture {
             onTap()
         }

@@ -16,7 +16,8 @@ import SwiftUI
 // MARK: - Model
 
 final class InlineInsertModel: ObservableObject {
-    static let maxRows = 6
+    /// How many suggestions to show, from Settings.
+    let maxRows = InlineInsertPreferences.maxSuggestions
 
     @Published var query = "" { didSet { if query != oldValue { refilter() } } }
     @Published private(set) var rows: [String] = []
@@ -43,7 +44,8 @@ final class InlineInsertModel: ObservableObject {
         self.data = loadSymbolData()
         self.totalSymbols = data.allSymbols.count
         let available = Set(data.allSymbols)
-        self.recents = RecentSymbols.all.filter { available.contains($0) }
+        self.recents = InlineInsertPreferences.showRecents
+            ? RecentSymbols.all.filter { available.contains($0) } : []
         refilter()
     }
 
@@ -51,7 +53,7 @@ final class InlineInsertModel: ObservableObject {
         let list = showingRecents
             ? recents
             : SymbolSearch.filter(data.allSymbols, query: query, index: data.searchIndex)
-        rows = Array(list.prefix(Self.maxRows))
+        rows = Array(list.prefix(maxRows))
         selection = 0
     }
 
@@ -104,7 +106,7 @@ final class InlineInsertController {
         let visible = screen?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
 
         let height = Self.height(for: model)
-        let maxHeight = Self.fieldHeight + CGFloat(InlineInsertModel.maxRows) * Self.rowHeight + Self.listInset * 2 + 1
+        let maxHeight = Self.fieldHeight + CGFloat(model.maxRows) * Self.rowHeight + Self.listInset * 2 + 1
         opensUpward = caret.minY - 6 - maxHeight < visible.minY
         anchorY = opensUpward ? caret.maxY + 6 : caret.minY - 6
 
@@ -215,7 +217,8 @@ final class InlineInsertController {
             model.acceptCompletion()
         case 36, 76:  // return / enter
             if let symbol = model.selectedSymbol {
-                insert(symbol, style: flags.contains(.option) ? .imageCall : .automatic)
+                let format = InlineInsertPreferences.format
+                insert(symbol, style: flags.contains(.option) ? format.optionReturnStyle : format.returnStyle)
             }
         default:
             return false
@@ -230,7 +233,7 @@ final class InlineInsertController {
         close()
         // Let focus fall back to the editor before typing into it.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
-            EditorInserter.insert(text)
+            EditorInserter.insert(text, restoreClipboard: InlineInsertPreferences.restoreClipboard)
         }
     }
 }
@@ -346,7 +349,7 @@ private struct InlineInsertView: View {
             .fill(selected ? Color.accentColor : .clear)
         )
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { onPick(symbol, .automatic) }
+        .onTapGesture(count: 2) { onPick(symbol, InlineInsertPreferences.format.returnStyle) }
         .onTapGesture { model.selection = index }
     }
 }

@@ -5,6 +5,7 @@
 //  A short welcome tour shown on first launch (and from the "Guide" menu item).
 //
 
+import Combine
 import LaunchAtLogin
 import SwiftUI
 
@@ -16,8 +17,16 @@ struct OnboardingView: View {
     @State private var forward = true
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var shortcut = ShortcutStore.shared
+    @AppStorage(InlineInsertPreferences.Key.enabled) private var inlineEnabled = true
+    @State private var accessibilityTrusted = Accessibility.isTrusted
 
-    private let pageCount = 4
+    private let pageCount = 5
+
+    /// `startPage` lets the tour open at a given page (e.g. straight to Inline Insert setup).
+    init(startPage: Int = 0, onFinish: @escaping () -> Void) {
+        self.onFinish = onFinish
+        _page = State(initialValue: startPage)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,6 +35,7 @@ struct OnboardingView: View {
                 case 0: welcomePage
                 case 1: openPage
                 case 2: copyPage
+                case 3: inlinePage
                 default: finishPage
                 }
             }
@@ -40,8 +50,12 @@ struct OnboardingView: View {
 
             footer
         }
-        .frame(width: 460, height: 420)
+        .frame(width: 460, height: 460)
         .background(VisualEffectView(material: .sidebar, blendingMode: .behindWindow).ignoresSafeArea())
+        // Picks up the Accessibility switch as soon as it's turned on in System Settings.
+        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
+            if accessibilityTrusted != Accessibility.isTrusted { accessibilityTrusted = Accessibility.isTrusted }
+        }
     }
 
     // MARK: Pages
@@ -101,11 +115,60 @@ struct OnboardingView: View {
                    detail: "Select a symbol and press Return or Space, or ⌘C.")
             TipRow(icon: "cursorarrow.click.2", title: "Right-click for more",
                    detail: "Copy the icon image, or pick a variant like .fill or .slash.")
-            TipRow(icon: "swift", title: "Insert while you code",
-                   detail: "In a Swift file in Xcode or VS Code, the shortcut opens a search at your cursor and types the symbol for you.")
+            TipRow(icon: "arrow.up.and.down.and.arrow.left.and.right", title: "Keyboard first",
+                   detail: "Arrows move around the grid, Tab switches between panes.")
             Spacer()
         }
         .padding(.horizontal, 44)
+    }
+
+    private var inlinePage: some View {
+        VStack(spacing: 14) {
+            Text("Insert while you code")
+                .font(.system(size: 20, weight: .bold))
+                .padding(.top, 30)
+
+            InlineInsertMock()
+                .padding(.horizontal, 44)
+
+            Text("In a Swift file in Xcode, VS Code or Cursor, press \(shortcut.current.displayString) to search right at your text cursor. Return types the symbol into your code.")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 40)
+
+            VStack(spacing: 0) {
+                SetupRow(number: 1, title: "Turn on inline insert",
+                         detail: "You can switch it off any time in Settings.") {
+                    Toggle("", isOn: $inlineEnabled)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
+                Divider().padding(.leading, 44)
+                SetupRow(number: 2, title: "Allow Accessibility access",
+                         detail: "Lets the app find your cursor and type for you. Nothing leaves your Mac.") {
+                    if accessibilityTrusted {
+                        Label("Allowed", systemImage: "checkmark.circle.fill")
+                            .labelStyle(.titleAndIcon)
+                            .foregroundStyle(.green)
+                            .font(.system(size: 12, weight: .medium))
+                    } else {
+                        Button("Allow Access…") { Accessibility.requestAccess() }
+                            .controlSize(.small)
+                    }
+                }
+                .opacity(inlineEnabled ? 1 : 0.45)
+                .disabled(!inlineEnabled)
+            }
+            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .padding(.horizontal, 36)
+
+            Text("Choose editors, files and insert style in Settings → Inline Insert.")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+            Spacer(minLength: 0)
+        }
     }
 
     private var finishPage: some View {
@@ -211,6 +274,86 @@ private struct MenuBarMock: View {
         .frame(height: 32)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.primary.opacity(0.1)))
+    }
+}
+
+/// A tiny illustration: a line of code with the inline panel open under the cursor.
+private struct InlineInsertMock: View {
+    private let rows = ["star.fill", "star", "star.circle.fill"]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 0) {
+                Text("Image").foregroundStyle(.purple)
+                Text("(systemName: ")
+                Text("\"").foregroundStyle(.red)
+                Rectangle().fill(Color.accentColor).frame(width: 1.5, height: 14)
+                Text("\")").foregroundStyle(.red)
+            }
+            .font(.system(size: 12, design: .monospaced))
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 6) {
+                    Image(systemName: "star.fill").frame(width: 16)
+                    Text("\(Text("star").foregroundStyle(.primary))\(Text(".fill").foregroundStyle(.tertiary))")
+                }
+                .font(.system(size: 11, design: .monospaced))
+                .padding(.horizontal, 8)
+                .frame(height: 24)
+                Divider().padding(.horizontal, 6)
+                ForEach(Array(rows.enumerated()), id: \.offset) { index, symbol in
+                    HStack(spacing: 6) {
+                        Image(systemName: symbol).frame(width: 16)
+                        Text(symbol)
+                        Spacer()
+                        if index == 0 { Text("↩").font(.system(size: 9)).opacity(0.75) }
+                    }
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(index == 0 ? .white : .primary)
+                    .padding(.horizontal, 6)
+                    .frame(height: 20)
+                    .background(index == 0 ? Color.accentColor : .clear, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .padding(.horizontal, 4)
+            }
+            .padding(.bottom, 4)
+            .frame(width: 190)
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .padding(.leading, 120)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.primary.opacity(0.1)))
+    }
+}
+
+/// A numbered setup step with a control on the right.
+private struct SetupRow<Control: View>: View {
+    let number: Int
+    let title: String
+    let detail: String
+    @ViewBuilder var control: Control
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text("\(number)")
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .frame(width: 22, height: 22)
+                .background(Color.accentColor, in: Circle())
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title).font(.system(size: 13, weight: .semibold))
+                Text(detail)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            control
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
     }
 }
 

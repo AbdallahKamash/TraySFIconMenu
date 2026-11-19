@@ -24,6 +24,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var aboutWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        InlineInsertPreferences.registerDefaults()
+
         // When hosting unit tests, stay out of the way: no menu bar item, hotkey or windows.
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil { return }
 
@@ -41,7 +43,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         
-        popover.contentViewController = NSHostingController(rootView: SymbolBrowserView())
+        popover.contentViewController = NSHostingController(rootView: SymbolBrowserView { [weak self] in
+            self?.popover.performClose(nil)
+        })
 
         
         HotKeyManager.shared.onHotKey = { [weak self] in
@@ -100,8 +104,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             InlineInsertController.shared.close()
             return
         }
-        let inlineEnabled = UserDefaults.standard.object(forKey: "inlineInsertEnabled") as? Bool ?? true
-        if inlineEnabled, !popover.isShown, EditorContext.editorIsFrontmost {
+        if InlineInsertPreferences.isEnabled, !popover.isShown, EditorContext.editorIsFrontmost {
             if let context = EditorContext.capture() {
                 InlineInsertController.shared.show(context: context)
                 return
@@ -150,10 +153,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(
             NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ","))
-        menu.addItem(NSMenuItem(title: "Guide", action: #selector(openGuide), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "About", action: #selector(openAbout), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Guide…", action: #selector(openGuide), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "About \(AppInfo.name)", action: #selector(openAbout), keyEquivalent: ""))
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit", action: #selector(quitApp), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit \(AppInfo.name)", action: #selector(quitApp), keyEquivalent: "q"))
 
         statusItem.menu = menu
         statusItem.button?.performClick(nil)  
@@ -177,7 +180,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         
         // Not resizable: the content sizes the window (showCentered positions it).
-        let window = NSWindow(
+        let window = CenteredResizingWindow(
             contentRect: NSRect(x: 0, y: 0, width: 440, height: 300),
             styleMask: [.titled, .closable],
             backing: .buffered,
@@ -226,8 +229,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 420),
+        let window = CenteredResizingWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 460),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -275,7 +278,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let window = NSWindow(
+        let window = CenteredResizingWindow(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 560),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
@@ -333,5 +336,34 @@ extension NSWindow {
                 y: (visible.midY - size.height / 2).rounded()))
         }
         makeKeyAndOrderFront(nil)
+    }
+}
+
+/// A window whose size comes from its SwiftUI content (Settings, Guide, About). When that
+/// size changes, e.g. switching Settings tabs, AppKit would keep the bottom-left corner
+/// fixed so the window drifts up and to the right. This keeps its center fixed instead.
+final class CenteredResizingWindow: NSWindow {
+    override func setFrame(_ frameRect: NSRect, display flag: Bool) {
+        super.setFrame(centered(frameRect), display: flag)
+    }
+
+    override func setFrame(_ frameRect: NSRect, display displayFlag: Bool, animate animateFlag: Bool) {
+        super.setFrame(centered(frameRect), display: displayFlag, animate: animateFlag)
+    }
+
+    private func centered(_ proposed: NSRect) -> NSRect {
+        // Re-anchor size changes on a visible window (AppKit proposes keeping the top-left
+        // corner). Same-size moves, and anything before the window is shown, pass through;
+        // showCentered positions with setFrameOrigin, which isn't affected.
+        guard isVisible, proposed.size != frame.size else { return proposed }
+        var rect = proposed
+        rect.origin.x = (frame.midX - proposed.width / 2).rounded()
+        rect.origin.y = (frame.midY - proposed.height / 2).rounded()
+        // Keep it on screen.
+        if let visible = screen?.visibleFrame {
+            rect.origin.x = min(max(rect.minX, visible.minX), visible.maxX - rect.width)
+            rect.origin.y = min(max(rect.minY, visible.minY), visible.maxY - rect.height)
+        }
+        return rect
     }
 }

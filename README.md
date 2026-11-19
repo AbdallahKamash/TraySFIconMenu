@@ -20,6 +20,7 @@ Grab the latest build from the [Releases page](https://github.com/AbdallahKamash
   - Numbers by value: `1`, `01`, `one`, `one circle` or `one.circle` all find `01.circle` and `1.circle`.
   - Characters and currencies: `+`, `!`, `%`, `$`, `€`, `dollar`, `euro` …
   - Old names: renamed symbols are found by their legacy names (e.g. `volume` → `speaker`).
+- **Inline insert while you code.** In a Swift file in Xcode, VS Code or Cursor, the shortcut opens a small Liquid Glass search right at your text cursor. Type to autocomplete (`Tab` completes, `Return` inserts) and the symbol is typed into your code, with quotes added when needed. `⌥Return` inserts `Image(systemName:)`. Choose the editors, file types, insert style, number of suggestions and more in **Settings → Inline Insert**. Requires Accessibility access, which the welcome tour helps you grant.
 - **Browse by category**, using the same categories as Apple's SF Symbols app, including Apple's own **What's New** list.
 - **Copy what you need.** Copy the symbol name, or the icon itself as a high-resolution image.
 - **Variants at a glance.** Right-click a symbol for its whole family: `.fill`, `.slash`, badges, and localized versions (Arabic, Hindi, right-to-left …).
@@ -38,9 +39,22 @@ Grab the latest build from the [Releases page](https://github.com/AbdallahKamash
 | `Tab` | Move focus between search, sidebar, and grid |
 | `↑` `↓` `←` `→` | Move around the grid |
 | `Return` or `Space` | Copy the selected symbol's name |
+| Double-click a symbol | Copy its name |
+| `Esc` | Clear the search, then close the browser |
 | `⌘C` | Copy the selected symbol's name |
 | Right-click a symbol | Copy Name, Copy Icon, Variants, availability |
 | Right-click the menu bar icon | Settings, Guide, About, Quit |
+
+**Inline insert** (in a Swift file in Xcode, VS Code or Cursor, after pressing the shortcut):
+
+| Key | Action |
+|-----|--------|
+| Type | Search, with the top match completed in grey |
+| `Tab` | Accept the grey completion |
+| `↑` `↓` | Choose a suggestion |
+| `Return` | Insert (format set in Settings → Inline Insert) |
+| `⌥Return` | Insert the alternative format, e.g. `Image(systemName: "star.fill")` |
+| `Esc` | Close without inserting |
 
 ## Requirements
 
@@ -94,6 +108,8 @@ To update to a newer SF Symbols release, copy the files from `/Applications/SF S
 ## Privacy
 
 TraySFIconMenu works completely offline. It doesn't collect, store, or send any data. The only time it touches the internet is when you click a link in the About window.
+
+Inline insert uses macOS Accessibility access only to find your text cursor, read the name of the open file, and type the chosen symbol. Because macOS doesn't allow this inside the App Sandbox, the app is not sandboxed.
 
 ## Acknowledgments
 

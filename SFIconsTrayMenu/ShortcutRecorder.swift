@@ -70,13 +70,13 @@ struct ShortcutRecorder: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.red)
                     .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: 300, alignment: .leading)
+                    .frame(width: 300, alignment: .leading)
             } else if isRecording {
                 Text("Use ⌘, ⌃ or ⌥ with a key (or an F-key). Esc cancels.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: 300, alignment: .leading)
+                    .frame(width: 300, alignment: .leading)
             }
         }
         .onDisappear(perform: stopRecording)
