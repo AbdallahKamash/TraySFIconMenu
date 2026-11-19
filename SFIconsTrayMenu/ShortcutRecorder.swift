@@ -107,7 +107,7 @@ struct ShortcutRecorder: View {
 
     private func handle(_ event: NSEvent) {
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-        if event.keyCode == 53 && flags.subtracting(.capsLock).isEmpty {  // plain Esc cancels
+        if event.keyCode == KeyCode.escape && flags.subtracting(.capsLock).isEmpty {  // plain Esc cancels
             stopRecording()
             return
         }

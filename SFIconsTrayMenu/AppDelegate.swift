@@ -11,8 +11,6 @@ import LaunchAtLogin
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
-    
-
     private var statusItem: NSStatusItem!
     private let popover: NSPopover = {
         let p = NSPopover()
@@ -31,7 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Must run before anything reads settings (the shortcut, first-run flag, recents).
         Self.importSettingsFromSandboxContainer()
-        
+
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem.button {
@@ -42,12 +40,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
 
-        
         popover.contentViewController = NSHostingController(rootView: SymbolBrowserView { [weak self] in
             self?.popover.performClose(nil)
         })
 
-        
         HotKeyManager.shared.onHotKey = { [weak self] in
             self?.handleHotKey()
         }
@@ -90,7 +86,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func handleClick() {
         guard let event = NSApp.currentEvent else { return }
-        if event.type == .rightMouseUp {
+        // Control-click counts as a right-click, as everywhere else on the Mac.
+        if event.type == .rightMouseUp || event.modifierFlags.contains(.control) {
             showRightClickMenu()
         } else {
             togglePopover()
@@ -128,9 +125,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let alert = NSAlert()
         alert.messageText = "Insert symbols right where you type?"
         alert.informativeText = """
-            In a Swift file in Xcode or VS Code, the shortcut can open a small search at your             text cursor and type the symbol into your code.
+            In a Swift file in Xcode or VS Code, the shortcut can open a small search at your \
+            text cursor and type the symbol into your code.
 
-            This needs Accessibility access so TraySFIconMenu can find the cursor and type for you.             You can change this any time in Settings.
+            This needs Accessibility access so \(AppInfo.name) can find the cursor and type for you. \
+            You can change this any time in Settings.
             """
         alert.addButton(withTitle: "Allow Access…")
         alert.addButton(withTitle: "Not Now")
@@ -162,166 +161,94 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit \(AppInfo.name)", action: #selector(quitApp), keyEquivalent: "q"))
 
+        // Attach the menu just for this click, so a left click still opens the browser.
         statusItem.menu = menu
-        statusItem.button?.performClick(nil)  
-        statusItem.menu = nil  
+        statusItem.button?.performClick(nil)
+        statusItem.menu = nil
     }
+
+    // MARK: - Windows
 
     @objc private func openSettings() {
-        
-        if let existingWindow = settingsWindow {
-            if existingWindow.isVisible {
-                existingWindow.showCentered()
-                NSApp.activate(ignoringOtherApps: true)
-                return
-            } else {
-                
-                NotificationCenter.default.removeObserver(
-                    self, name: NSWindow.willCloseNotification, object: existingWindow)
-                settingsWindow = nil
-            }
-        }
-
-        
-        // Not resizable: the content sizes the window (showCentered positions it).
-        let window = CenteredResizingWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 440, height: 300),
-            styleMask: [.titled, .closable],
-            backing: .buffered,
-            defer: false
-        )
-
-        
-        window.contentViewController = NSHostingController(rootView: SettingsView())
-        window.title = "Settings"
-        window.isReleasedWhenClosed = false  
-
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(settingsWindowWillClose(_:)),
-            name: NSWindow.willCloseNotification,
-            object: window
-        )
-
-        settingsWindow = window
-        window.showCentered()
-        NSApp.activate(ignoringOtherApps: true)
-    }
-
-    @objc private func settingsWindowWillClose(_ notification: Notification) {
-        
-        settingsWindow = nil
-
-        
-        if let window = notification.object as? NSWindow {
-            NotificationCenter.default.removeObserver(
-                self, name: NSWindow.willCloseNotification, object: window)
+        show(\.settingsWindow) {
+            makeWindow(title: "Settings", size: CGSize(width: 440, height: 300), content: SettingsView())
         }
     }
 
     @objc private func openGuide() {
-        if let existingWindow = guideWindow {
-            if existingWindow.isVisible {
-                existingWindow.showCentered()
-                NSApp.activate(ignoringOtherApps: true)
-                return
-            } else {
-                NotificationCenter.default.removeObserver(
-                    self, name: NSWindow.willCloseNotification, object: existingWindow)
-                guideWindow = nil
-            }
-        }
-
-        let window = CenteredResizingWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 460),
-            styleMask: [.titled, .closable, .fullSizeContentView],
-            backing: .buffered,
-            defer: false
-        )
-
-        window.contentViewController = NSHostingController(
-            rootView: OnboardingView { [weak self] in
+        show(\.guideWindow) {
+            let tour = OnboardingView { [weak self] in
                 guard let self else { return }
                 self.guideWindow?.close()
                 // End the tour by pointing at where the app lives.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                     LaunchOverlay.show(for: self.statusItem)
                 }
-            })
-        window.title = "Welcome"
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
-        window.isMovableByWindowBackground = true
-        window.isReleasedWhenClosed = false
-
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(guideWindowWillClose(_:)),
-            name: NSWindow.willCloseNotification,
-            object: window
-        )
-
-        guideWindow = window
-        window.showCentered()
-        NSApp.activate(ignoringOtherApps: true)
-    }
-
-    @objc private func guideWindowWillClose(_ notification: Notification) {
-        guideWindow = nil
-        if let window = notification.object as? NSWindow {
-            NotificationCenter.default.removeObserver(
-                self, name: NSWindow.willCloseNotification, object: window)
+            }
+            return makeWindow(
+                title: "Welcome", size: CGSize(width: 460, height: 460), hidesTitleBar: true, content: tour)
         }
     }
 
     @objc private func openAbout() {
-        if let window = aboutWindow {
-            window.showCentered()
-            NSApp.activate(ignoringOtherApps: true)
-            return
+        show(\.aboutWindow) {
+            makeWindow(
+                title: "About \(AppInfo.name)", size: CGSize(width: 400, height: 560), hidesTitleBar: true,
+                content: AboutView())
         }
+    }
 
-        let window = CenteredResizingWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 560),
-            styleMask: [.titled, .closable, .fullSizeContentView],
-            backing: .buffered,
-            defer: false
-        )
-        window.contentViewController = NSHostingController(rootView: AboutView())
-        window.title = "About \(AppInfo.name)"
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
-        window.isMovableByWindowBackground = true
-        window.isReleasedWhenClosed = false
-
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(aboutWindowWillClose(_:)),
-            name: NSWindow.willCloseNotification,
-            object: window
-        )
-
-        aboutWindow = window
+    /// Brings the window stored at `keyPath` to the front, building it with `make` if it
+    /// isn't open. Closing a window drops it (see `windowWillClose`), so the next open
+    /// starts from a fresh one.
+    private func show(_ keyPath: ReferenceWritableKeyPath<AppDelegate, NSWindow?>, make: () -> NSWindow) {
+        let window: NSWindow
+        if let existing = self[keyPath: keyPath] {
+            window = existing
+        } else {
+            window = make()
+            NotificationCenter.default.addObserver(
+                self, selector: #selector(windowWillClose(_:)),
+                name: NSWindow.willCloseNotification, object: window)
+            self[keyPath: keyPath] = window
+        }
         window.showCentered()
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    @objc private func aboutWindowWillClose(_ notification: Notification) {
-        aboutWindow = nil
-        if let window = notification.object as? NSWindow {
-            NotificationCenter.default.removeObserver(
-                self, name: NSWindow.willCloseNotification, object: window)
+    /// A fixed-size window around SwiftUI content. Not resizable: the content sizes the
+    /// window (showCentered positions it). `hidesTitleBar` lets the content run under a
+    /// transparent title bar, for the tour and About.
+    private func makeWindow(
+        title: String, size: CGSize, hidesTitleBar: Bool = false, content: some View
+    ) -> NSWindow {
+        let window = CenteredResizingWindow(
+            contentRect: NSRect(origin: .zero, size: size),
+            styleMask: hidesTitleBar ? [.titled, .closable, .fullSizeContentView] : [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentViewController = NSHostingController(rootView: content)
+        window.title = title
+        window.isReleasedWhenClosed = false
+        if hidesTitleBar {
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            window.isMovableByWindowBackground = true
         }
+        return window
+    }
+
+    @objc private func windowWillClose(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow else { return }
+        NotificationCenter.default.removeObserver(self, name: NSWindow.willCloseNotification, object: window)
+        if window === settingsWindow { settingsWindow = nil }
+        if window === guideWindow { guideWindow = nil }
+        if window === aboutWindow { aboutWindow = nil }
     }
 
     @objc private func quitApp() {
         NSApp.terminate(nil)
-    }
-   
-    deinit {
-        
-        NotificationCenter.default.removeObserver(self)
     }
 }
 

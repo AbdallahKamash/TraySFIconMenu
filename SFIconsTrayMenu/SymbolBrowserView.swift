@@ -25,6 +25,8 @@ struct SymbolBrowserView: View {
     @State private var showCopyToast = false
     @State private var copiedSymbolName = ""
     @State private var copiedWhat = "name"
+    /// Hides the toast two seconds after the latest copy.
+    @State private var toastTask: Task<Void, Never>?
     @State private var accessNotice = InlineAccessNotice.shared
     @State private var eventMonitor: Any?
     @State private var scrollToTopID = UUID()
@@ -151,7 +153,7 @@ struct SymbolBrowserView: View {
 
                     Divider()
                     HStack {
-                        Text("\(filtered.count) symbols")
+                        Text(filtered.count == 1 ? "1 symbol" : "\(filtered.count.formatted()) symbols")
                         Spacer()
                         if let index = selectedSymbolIndex, index < filtered.count,
                             let since = symbolData?.availabilityDescription(for: filtered[index])
@@ -219,12 +221,12 @@ struct SymbolBrowserView: View {
             self.eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 // Only handle keys typed in the browser popover, never in Settings etc.
                 guard let hostWindow, event.window === hostWindow else { return event }
-                if event.keyCode == 53 {  // Esc: clear the search first, then close
+                if event.keyCode == KeyCode.escape {  // clear the search first, then close
                     handleEscape()
                     return nil
                 }
                 if searchFieldFocused {
-                    if event.keyCode == 125 || event.keyCode == 48 {
+                    if event.keyCode == KeyCode.downArrow || event.keyCode == KeyCode.tab {
                         if !filtered.isEmpty {
                             searchFieldFocused = false
                             isGridFocused = true
@@ -233,7 +235,7 @@ struct SymbolBrowserView: View {
                         }
                     }
                 } else if isSidebarFocused {
-                    if event.keyCode == 48 {
+                    if event.keyCode == KeyCode.tab {
                         isSidebarFocused = false
                         searchFieldFocused = true
                         return nil
@@ -273,38 +275,34 @@ struct SymbolBrowserView: View {
     }
 
     private func copyIcon(_ name: String) {
-        RecentSymbols.add(name)
+        // Leave the clipboard alone if the symbol can't be drawn.
+        guard let image = renderedSymbol(name) else { return }
         let pb = NSPasteboard.general
         pb.clearContents()
-        if let image = renderedSymbol(name) {
-            pb.writeObjects([image])
-        }
-
-        copiedWhat = "icon"
-        copiedSymbolName = name
-        withAnimation { showCopyToast = true }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            if copiedSymbolName == name {
-                withAnimation { showCopyToast = false }
-            }
-        }
+        pb.writeObjects([image])
+        didCopy(name, what: "icon")
     }
 
     private func copySymbol(_ name: String) {
-        RecentSymbols.add(name)
         let pb = NSPasteboard.general
         pb.clearContents()
         pb.setString(name, forType: .string)
+        didCopy(name, what: "name")
+    }
 
-        copiedWhat = "name"
+    /// Remembers the symbol and shows the "Copied" toast for two seconds.
+    private func didCopy(_ name: String, what: String) {
+        RecentSymbols.add(name)
+        copiedWhat = what
         copiedSymbolName = name
         withAnimation { showCopyToast = true }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            if copiedSymbolName == name {
-                withAnimation { showCopyToast = false }
-            }
+        // Restart the countdown, so copying again keeps the toast up for a full two seconds.
+        toastTask?.cancel()
+        toastTask = Task {
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
+            withAnimation { showCopyToast = false }
         }
     }
 
@@ -361,7 +359,7 @@ struct SymbolBrowserView: View {
             return
         }
 
-        if event.keyCode == 48 {
+        if event.keyCode == KeyCode.tab {
             selectedSymbolIndex = nil
             isGridFocused = false
             isSidebarFocused = true
@@ -380,18 +378,18 @@ struct SymbolBrowserView: View {
         }
 
         switch event.keyCode {
-        case 123:
+        case KeyCode.leftArrow:
             nextIndex = (nextIndex <= 0) ? count - 1 : nextIndex - 1
-        case 124:
+        case KeyCode.rightArrow:
             nextIndex = (nextIndex >= count - 1) ? 0 : nextIndex + 1
-        case 125:
+        case KeyCode.downArrow:
             let target = nextIndex + columnsCount
             if target < count {
                 nextIndex = target
             } else {
                 nextIndex = nextIndex % columnsCount
             }
-        case 126:
+        case KeyCode.upArrow:
             let target = nextIndex - columnsCount
             if target >= 0 {
                 nextIndex = target
@@ -402,7 +400,7 @@ struct SymbolBrowserView: View {
                 selectedSymbolIndex = nil
                 return
             }
-        case 36, 49:
+        case KeyCode.return, KeyCode.keypadEnter, KeyCode.space:
             if nextIndex < count {
                 copySymbol(filtered[nextIndex])
             }

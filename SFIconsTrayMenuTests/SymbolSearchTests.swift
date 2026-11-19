@@ -163,6 +163,14 @@ import Testing
         #expect(InsertText.text(for: "star", before: "Text(\"a\") ", style: .automatic) == "star")
     }
 
+    @Test func quotesOnEarlierLinesDoNotCount() {
+        // The text before the cursor can start halfway through a string on an earlier line.
+        let before = "lo, world\")\n    Image(systemName: \""
+        #expect(InsertText.text(for: "star", before: before, style: .imageCall) == "star")
+        // …and a closed string on the cursor's own line still isn't "inside quotes".
+        #expect(InsertText.text(for: "star", before: "\"a\nText(\"b\") ", style: .imageCall) == "Image(systemName: \"star\")")
+    }
+
     @Test func optionReturnInsertsImageCall() {
         #expect(InsertText.text(for: "star", before: "VStack { ", style: .imageCall) == "Image(systemName: \"star\")")
         // Already inside quotes: don't nest a second Image(...).
@@ -183,6 +191,14 @@ import Testing
     @Test func ignoresNonSwiftFiles() {
         #expect(EditorContext.swiftFileName(document: "file:///Users/me/README.md", title: "README.md — App") == nil)
         #expect(EditorContext.swiftFileName(document: nil, title: "notes.swiftpm — x") == nil)
+    }
+}
+
+@Suite @MainActor struct KeyCodeTests {
+    @Test func findsThePasteKeyInTheCurrentLayout() throws {
+        // Whatever layout the tests run under, some key must mean ⌘V.
+        let key = try #require(KeyCode.forCommandShortcut("v"))
+        #expect(key < 128)
     }
 }
 

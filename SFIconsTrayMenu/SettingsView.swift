@@ -6,7 +6,6 @@
 //
 
 
-import Combine
 import LaunchAtLogin
 import SwiftUI
 
@@ -57,7 +56,7 @@ struct SettingsView: View {
         // Size the window to exactly what the content needs, so nothing gets truncated.
         .fixedSize()
         // Notice when the user flips the switch in System Settings.
-        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
+        .everySecond {
             if accessibilityTrusted != Accessibility.isTrusted { accessibilityTrusted = Accessibility.isTrusted }
             let recents = !RecentSymbols.all.isEmpty
             if hasRecents != recents { hasRecents = recents }

@@ -5,7 +5,6 @@
 //  A short welcome tour shown on first launch (and from the "Guide" menu item).
 //
 
-import Combine
 import LaunchAtLogin
 import SwiftUI
 
@@ -53,7 +52,7 @@ struct OnboardingView: View {
         .frame(width: 460, height: 460)
         .background(VisualEffectView(material: .sidebar, blendingMode: .behindWindow).ignoresSafeArea())
         // Picks up the Accessibility switch as soon as it's turned on in System Settings.
-        .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
+        .everySecond {
             if accessibilityTrusted != Accessibility.isTrusted { accessibilityTrusted = Accessibility.isTrusted }
         }
     }

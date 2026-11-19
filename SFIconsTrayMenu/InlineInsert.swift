@@ -207,15 +207,15 @@ final class InlineInsertController {
         guard let model else { return false }
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         switch event.keyCode {
-        case 53:  // esc
+        case KeyCode.escape:
             close()
-        case 125:  // ↓
+        case KeyCode.downArrow:
             model.move(1)
-        case 126:  // ↑
+        case KeyCode.upArrow:
             model.move(-1)
-        case 48:  // tab
+        case KeyCode.tab:
             model.acceptCompletion()
-        case 36, 76:  // return / enter
+        case KeyCode.return, KeyCode.keypadEnter:
             if let symbol = model.selectedSymbol {
                 let format = InlineInsertPreferences.format
                 insert(symbol, style: flags.contains(.option) ? format.optionReturnStyle : format.returnStyle)
